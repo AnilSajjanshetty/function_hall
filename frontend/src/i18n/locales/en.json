@@ -91,5 +91,15 @@
   "corporateEventTitle": "Corporate Event Package",
   "corporateEventMsg": "Host your next seminar or team outing with full AV setup and lunch included.",
   "kidsBirthdayTitle": "Kids Birthday Bash",
-  "kidsBirthdayMsg": "Free balloon decoration + themed cake for birthdays booked this month!"
+  "kidsBirthdayMsg": "Free balloon decoration + themed cake for birthdays booked this month!",
+  "viewAll": "View All",
+  "recentEvents": "Recent Events",
+  "viewGallery": "View Gallery",
+  "bookingSuccess": "Booking submitted successfully!",
+  "bookingFail": "Failed to submit booking. Try again.",
+    "event_gallery": "Event Gallery",
+  "memorable_moments": "Memorable moments from our celebrations",
+  "party": "Party",
+  "grand_celebration": "Grand Celebration",
+  "march_date": "March {{date}}, 2025"
 }
