@@ -3,7 +3,7 @@
 // src/pages/RegisterPage.jsx - Updated Register Page
 // ============================================
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axiosInstance from '../utils/axiosInstance';
 
 export default function RegisterPage() {
@@ -57,7 +57,7 @@ export default function RegisterPage() {
 
   return (
   
-    <div className="min-h-screen bg-gradient-to-br from-blue-800 to-indigo-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 to-pink-900 flex items-center justify-center px-4">
       <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
         <h2 className="text-3xl font-bold mb-6 text-center text-blue-900">Register</h2>
         
@@ -123,20 +123,21 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700 disabled:opacity-50"
+            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-bold hover:opacity-90 disabled:opacity-50"
           >
             {loading ? 'Registering...' : 'Register'}
           </button>
         </form>
         
-        <p className="text-center text-sm mt-4 text-gray-600">
-          Already have an account?{' '}
-          <span
-            className="text-blue-600 cursor-pointer hover:underline"
-            onClick={() => navigate('/login')}
+             {/* 🔹 Login link */}
+        <p className="text-center text-gray-600 mt-6">
+          Already have an account?   
+          <Link
+            to="/login"
+            className="text-purple-600 font-semibold hover:underline"
           >
-            Login
-          </span>
+             Login
+          </Link>
         </p>
       </div>
     </div>

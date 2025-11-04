@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import axiosInstance from "../utils/axiosInstance";
 import config from "../../config";
@@ -98,6 +98,16 @@ export default function LoginPage() {
           >
             {loading ? "Logging in..." : "Login"}
           </button>
+            {/* 🔹 Register link */}
+        <p className="text-center text-gray-600 mt-6">
+          Don’t have an account?
+          <Link
+            to="/register"
+            className="text-purple-600 font-semibold hover:underline"
+          >
+            Register here
+          </Link>
+        </p>
         </form>
       </div>
     </div>
