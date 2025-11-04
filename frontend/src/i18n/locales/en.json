@@ -97,9 +97,11 @@
   "viewGallery": "View Gallery",
   "bookingSuccess": "Booking submitted successfully!",
   "bookingFail": "Failed to submit booking. Try again.",
-    "event_gallery": "Event Gallery",
+  "event_gallery": "Event Gallery",
   "memorable_moments": "Memorable moments from our celebrations",
   "party": "Party",
   "grand_celebration": "Grand Celebration",
-  "march_date": "March {{date}}, 2025"
+  "march_date": "March {{date}}, 2025",
+  "register": "Register",
+  "dashboard": "Dashboard"
 }

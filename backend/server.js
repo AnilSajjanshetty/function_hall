@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
-
+const connectDB = require('./config/db');
 // Load environment variables
 dotenv.config();
 
@@ -63,6 +63,9 @@ app.use((req, res) => {
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
+
+// Connect to MongoDB
+connectDB();
 
 // Start server
 app.listen(PORT, () => {

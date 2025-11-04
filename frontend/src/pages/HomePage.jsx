@@ -19,7 +19,7 @@ export default function HomePage({ announcements, recentEvents }) {
             <Bell className="w-10 h-10 mr-3 animate-bounce" /> {t("latestAnnouncements")}
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
-            {announcements.slice(0, 3).map((ann) => (
+            {announcements?.slice(0, 3).map((ann) => (
               <div
                 key={ann.id}
                 className="bg-white rounded-xl shadow-2xl p-6 transform hover:scale-105 transition-all"
@@ -47,7 +47,7 @@ export default function HomePage({ announcements, recentEvents }) {
             {t("recentEvents")}
           </h2>
           <div className="grid md:grid-cols-2 gap-8">
-            {recentEvents.map((event) => (
+            {recentEvents?.map((event) => (
               <div
                 key={event.id}
                 className="bg-white rounded-2xl shadow-xl overflow-hidden"

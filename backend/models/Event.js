@@ -8,7 +8,24 @@ const EventSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    required: true
+    required: true,
+    enum: [
+      'Wedding',
+      'Engagement',
+      'Birthday Party',
+      'Office Event',
+      'Anniversary',
+      'Baby Shower',
+      'Graduation Party',
+      'Bridal Shower',
+      'Retirement Party',
+      'Housewarming',
+      'Festival Celebration',
+      'Charity Event',
+      'Product Launch',
+      'Networking Event',
+      'Other Event'
+    ]
   },
   date: {
     type: String, // You can change to Date if needed

@@ -36,6 +36,7 @@ export default function BookingPage({ events }) {
   };
 
   return (
+    
     <div className="min-h-screen bg-gradient-to-br from-purple-100 to-pink-100 py-20 px-4">
       <div className="container mx-auto max-w-2xl">
         <div className="bg-white rounded-2xl shadow-2xl p-8">
@@ -73,7 +74,7 @@ export default function BookingPage({ events }) {
               className="w-full px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500"
             >
               <option value="">{t("eventType")}</option>
-              {events.map((e) => (
+              {events?.map((e) => (
                 <option key={e.id} value={e.name}>
                   {e.name}
                 </option>

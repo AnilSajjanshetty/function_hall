@@ -216,17 +216,18 @@ const DEFAULT_RECENT_EVENTS = [
   }
 
   return (
+    
     <div className="min-h-screen bg-gray-100 py-20 px-4">
       <div className="container mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-4xl font-bold text-purple-900">Admin Dashboard</h2>
-          <button 
+          {/* <button 
             onClick={handleLogout}
             className="flex items-center gap-2 bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition">
             <LogOut className="w-5 h-5" />
             Logout
-          </button>
+          </button> */}
         </div>
 
         {/* Tabs */}

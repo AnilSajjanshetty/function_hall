@@ -1,47 +1,35 @@
-// middleware/auth.js
+// ============================================
+// middleware/authMiddleware.js
+// ============================================
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || 'access-secret-key-change-in-production';
 
-exports.authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-
-  if (!token) {
-    return res.status(401).json({ 
-      error: 'Access denied. No token provided.' 
-    });
-  }
-
+exports.authenticate = (req, res, next) => {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Access token required' });
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    // Verify token
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
     req.user = decoded;
     next();
-  } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ 
-        error: 'Token expired. Please login again.' 
-      });
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Access token expired' });
     }
-    return res.status(403).json({ 
-      error: 'Invalid token' 
-    });
+    return res.status(403).json({ error: 'Invalid access token' });
   }
 };
 
-exports.optionalAuth = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (token) {
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET);
-      req.user = decoded;
-    } catch (error) {
-      // Token invalid but continue anyway
-      req.user = null;
-    }
+exports.authorizeAdmin = (req, res, next) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
   }
-  
   next();
 };

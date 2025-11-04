@@ -1,29 +1,50 @@
-import { Link, useLocation } from "react-router-dom";
-import { Sparkles, Menu, X } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Sparkles, Menu, X, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useTranslation } from "react-i18next";
 
-export default function Navigation({ isAdmin }) {
+export default function Navigation({ isLoggedIn, setIsLoggedIn, role }) {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const location = useLocation();
+  const navigate = useNavigate();
   const { t } = useTranslation();
-
+  console.log("role in nav:", role);
+  // track scroll for background
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // ✅ Check login status whenever route changes
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    setIsLoggedIn(!!token);
+  }, [location]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
+    localStorage.removeItem("role");
+    setIsLoggedIn(false);
+    navigate("/");
+  };
+
   const navItems = [
-    { path: "/", label: t("home") },
+    {
+      path: isLoggedIn ? `/${role}` : "/",
+      label: t("home"),
+    },
     { path: "/events", label: t("events") },
     { path: "/gallery", label: t("gallery") },
     { path: "/services", label: t("services") },
     { path: "/announcements", label: t("announcement") },
     { path: "/booking", label: t("bookNow") },
     { path: "/contact", label: t("contact") },
+    ...(isLoggedIn ? [{ path: `/${role}`, label: t("dashboard") }] : []),
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -39,7 +60,9 @@ export default function Navigation({ isAdmin }) {
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <Link to="/" className="flex items-center space-x-2">
           <Sparkles className="w-8 h-8 text-pink-400" />
-          <span className="text-2xl font-bold text-white">{t("heroTitle")}</span>
+          <span className="text-2xl font-bold text-white">
+            {t("heroTitle")}
+          </span>
         </Link>
 
         {/* Desktop Menu */}
@@ -55,24 +78,30 @@ export default function Navigation({ isAdmin }) {
               {item.label}
             </Link>
           ))}
-
-          {isAdmin ? (
-            <Link
-              to="/admin"
-              className="bg-pink-600 text-white px-4 py-2 rounded-full text-sm"
+          {isLoggedIn ? (
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition"
             >
-              {t("admin")}
-            </Link>
+              <LogOut className="w-4 h-4" />
+              <span>{t("logout")}</span>
+            </button>
           ) : (
-            <Link
-              to="/admin/login"
-              className="text-white hover:text-pink-300 text-sm"
-            >
-              {t("admin")}
-            </Link>
+            <>
+              <Link
+                to="/login"
+                className="text-white hover:text-pink-300 text-sm"
+              >
+                {t("login")}
+              </Link>
+              <Link
+                to="/register"
+                className="text-white hover:text-pink-300 text-sm"
+              >
+                {t("register")}
+              </Link>
+            </>
           )}
-
-          {/* Language Switcher */}
           <LanguageSwitcher />
         </div>
 
@@ -99,14 +128,37 @@ export default function Navigation({ isAdmin }) {
                 {item.label}
               </Link>
             ))}
+
+            {isLoggedIn ? (
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setShowMobileMenu(false);
+                }}
+                className="flex items-center gap-2  bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>{t("logout")}</span>
+              </button>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="text-white text-left text-sm"
+                >
+                  {t("login")}
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="text-white text-left text-sm"
+                >
+                  {t("register")}
+                </Link>
+              </>
+            )}
             <LanguageSwitcher />
-            <Link
-              to="/admin/login"
-              onClick={() => setShowMobileMenu(false)}
-              className="text-white text-left text-sm"
-            >
-              {t("Admin")}
-            </Link>
           </div>
         </div>
       )}

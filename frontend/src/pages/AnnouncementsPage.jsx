@@ -57,6 +57,7 @@ const AnnouncementsPage = () => {
   };
 
   return (
+    
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 py-20 px-4 pt-24">
       <div className="container mx-auto max-w-4xl">
         <h2 className="text-5xl font-bold text-center mb-4 text-purple-900 flex items-center justify-center">

@@ -1,14 +1,15 @@
-// routes/announcementRoutes.js
 const express = require('express');
 const router = express.Router();
 const announcementController = require('../controllers/announcementController');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticate,authorizeAdmin } = require('../middleware/auth');
 
 // Public routes
 router.get('/', announcementController.getAllAnnouncements);
+// router.get('/:id', announcementController.getAnnouncementById);
 
 // Protected routes (admin only)
-router.post('/', authenticateToken, announcementController.createAnnouncement);
-router.delete('/:id', authenticateToken, announcementController.deleteAnnouncement);
+router.post('/', authenticate,authorizeAdmin, announcementController.createAnnouncement);
+// router.put('/:id', authenticateToken, announcementController.updateAnnouncement);
+router.delete('/:id', authenticate, authorizeAdmin,announcementController.deleteAnnouncement);
 
 module.exports = router;

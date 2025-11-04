@@ -103,5 +103,7 @@
   "memorable_moments": "हमारे उत्सवों के यादगार पल",
   "party": "पार्टी",
   "grand_celebration": "भव्य समारोह",
-  "march_date": "मार्च {{date}}, 2025"
+  "march_date": "मार्च {{date}}, 2025",
+  "register": "रजिस्टर",
+  "dashboard": "डैशबोर्ड"
 }

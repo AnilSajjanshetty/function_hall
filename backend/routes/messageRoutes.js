@@ -2,10 +2,10 @@
 const express = require('express');
 const router = express.Router();
 const messageController = require('../controllers/messageController');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticate,authorizeAdmin } = require('../middleware/auth');
 
 // All routes are protected (admin only)
-router.get('/', authenticateToken, messageController.getAllMessages);
-router.put('/:id/read', authenticateToken, messageController.markAsRead);
+router.get('/', authenticate,authorizeAdmin, messageController.getAllMessages);
+router.put('/:id/read', authenticate, authorizeAdmin,messageController.markAsRead);
 
 module.exports = router;
