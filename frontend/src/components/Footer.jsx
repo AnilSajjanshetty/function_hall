@@ -11,7 +11,7 @@ export default function Footer() {
     { to: "/gallery", label: t("gallery") },
     { to: "/services", label: t("services") },
     { to: "/announcements", label: t("latestAnnouncements") },
-    { to: "/booking", label: t("bookNow") },
+    // { to: "/booking", label: t("bookNow") },
   ];
 
   return (
@@ -27,12 +27,6 @@ export default function Footer() {
               {link.label}
             </Link>
           ))}
-          <Link
-            to="/admin/login"
-            className="hover:text-pink-300 transition text-sm"
-          >
-            {t("admin")}
-          </Link>
         </div>
 
         <p className="text-pink-200">{t("copyright")}</p>

@@ -42,7 +42,7 @@ export default function Navigation({ isLoggedIn, setIsLoggedIn, role }) {
     { path: "/gallery", label: t("gallery") },
     { path: "/services", label: t("services") },
     { path: "/announcements", label: t("announcement") },
-    { path: "/booking", label: t("bookNow") },
+    // { path: "/booking", label: t("bookNow") },
     { path: "/contact", label: t("contact") },
     ...(isLoggedIn ? [{ path: `/${role}`, label: t("dashboard") }] : []),
   ];

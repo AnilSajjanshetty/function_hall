@@ -31,10 +31,10 @@ export default function Hero() {
         <p className="text-lg mb-8 text-gray-200">{t("heroDescription")}</p>
 
         <Link
-          to="/booking"
+          to="/register"
           className="inline-block bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-8 sm:px-10 md:px-12 py-3 sm:py-4 rounded-full text-lg sm:text-xl font-semibold transform hover:scale-105 transition-all shadow-2xl"
         >
-          {t("bookEventNow")}
+         Rigister to book now
         </Link>
 
         <div className="mt-12 md:mt-16 grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-8 max-w-3xl mx-auto">

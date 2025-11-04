@@ -103,5 +103,7 @@
   "grand_celebration": "Grand Celebration",
   "march_date": "March {{date}}, 2025",
   "register": "Register",
-  "dashboard": "Dashboard"
+  "dashboard": "Dashboard",
+  "announcement": "Announcement"
+
 }
