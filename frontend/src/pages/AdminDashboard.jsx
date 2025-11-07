@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BookingFormModal from "../components/BookingForm";
+import FeedbackForm from "../components/FeedbackForm";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -40,7 +41,10 @@ export default function AdminDashboard() {
 
   const eventTypes = ["Wedding", "Birthday Party", "Engagement", "Office Event", "Anniversary"];
 
-  // Load all data
+  // === Normalize MongoDB _id → id ===
+  const normalize = (arr) => (arr || []).map(item => ({ ...item, id: item._id }));
+
+  // === Load All Data ===
   useEffect(() => {
     loadAllData();
   }, []);
@@ -53,20 +57,20 @@ export default function AdminDashboard() {
         eventsRes,
         announcementsRes,
         messagesRes,
-        feedbacksRes,
+        // feedbacksRes,
       ] = await Promise.all([
         axiosInstance.get("/bookings"),
         axiosInstance.get("/events"),
-        axiosInstance.get("/announcements"),
+        axiosInstance.get("/announcements"), // ← FIXED
         axiosInstance.get("/messages"),
-        axiosInstance.get("/feedback"),
+        // axiosInstance.get("/feedback"),
       ]);
 
-      setBookings(bookingsRes.data || []);
-      setEvents(eventsRes.data || []);
-      setAnnouncements(announcementsRes.data || []);
-      setMessages(messagesRes.data || []);
-      setFeedbacks(feedbacksRes.data || []);
+      setBookings(normalize(bookingsRes.data));
+      setEvents(normalize(eventsRes.data));
+      setAnnouncements(normalize(announcementsRes.data));
+      setMessages(normalize(messagesRes.data));
+      // setFeedbacks(normalize(feedbacksRes.data));
     } catch (error) {
       console.error("Error loading data:", error);
       if (error.response?.status === 401 || error.response?.status === 403) {
@@ -86,9 +90,7 @@ export default function AdminDashboard() {
   const handleApprove = async (id) => {
     try {
       await axiosInstance.patch(`/bookings/${id}/status`, { status: "approved" });
-      setBookings((prev) =>
-        prev.map((b) => (b.id === id ? { ...b, status: "approved" } : b))
-      );
+      setBookings(prev => prev.map(b => b.id === id ? { ...b, status: "approved" } : b));
       alert("Booking approved!");
     } catch (e) {
       alert("Failed to approve");
@@ -98,9 +100,7 @@ export default function AdminDashboard() {
   const handleReject = async (id) => {
     try {
       await axiosInstance.patch(`/bookings/${id}/status`, { status: "rejected" });
-      setBookings((prev) =>
-        prev.map((b) => (b.id === id ? { ...b, status: "rejected" } : b))
-      );
+      setBookings(prev => prev.map(b => b.id === id ? { ...b, status: "rejected" } : b));
       alert("Booking rejected!");
     } catch (e) {
       alert("Failed to reject");
@@ -112,9 +112,7 @@ export default function AdminDashboard() {
     e.preventDefault();
     try {
       const res = await axiosInstance.post("/announcements", announcementForm);
-      alert(
-        `Announcement published! Emails: ${res.data.emailsSent}, SMS: ${res.data.smsSent}`
-      );
+      alert(`Announcement published! Emails: ${res.data.emailsSent}, SMS: ${res.data.smsSent}`);
       setAnnouncementForm({ title: "", message: "" });
       loadAllData();
     } catch (e) {
@@ -125,14 +123,8 @@ export default function AdminDashboard() {
   // === EVENTS ===
   const handleEventSubmit = async (e) => {
     e.preventDefault();
-    const imageUrls = eventForm.imageUrls
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const videoUrls = eventForm.videoUrls
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const imageUrls = eventForm.imageUrls.split(",").map(s => s.trim()).filter(Boolean);
+    const videoUrls = eventForm.videoUrls.split(",").map(s => s.trim()).filter(Boolean);
 
     try {
       await axiosInstance.post("/events", {
@@ -174,7 +166,7 @@ export default function AdminDashboard() {
     if (!feedbackForm.text.trim()) return;
     try {
       const res = await axiosInstance.post("/feedback", { text: feedbackForm.text });
-      setFeedbacks((prev) => [...prev, res.data]);
+      setFeedbacks(prev => [...prev, { ...res.data, id: res.data._id }]);
       setFeedbackForm({ text: "" });
       alert("Feedback added!");
     } catch (e) {
@@ -186,7 +178,7 @@ export default function AdminDashboard() {
     if (!window.confirm("Delete this feedback?")) return;
     try {
       await axiosInstance.delete(`/feedback/${id}`);
-      setFeedbacks((prev) => prev.filter((f) => f.id !== id));
+      setFeedbacks(prev => prev.filter(f => f.id !== id));
       alert("Feedback deleted");
     } catch (e) {
       alert("Failed to delete");
@@ -260,8 +252,11 @@ export default function AdminDashboard() {
                 No bookings yet
               </div>
             ) : (
-              bookings.map((b) => (
+
+              
+              bookings?.map((b) => (
                 <div key={b.id} className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition">
+                  {console.log(bookings) }
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h4 className="text-xl font-bold text-gray-800">{b.name}</h4>
@@ -465,7 +460,9 @@ export default function AdminDashboard() {
                 <div key={a.id} className="bg-purple-50 p-4 rounded-lg">
                   <div className="flex justify-between mb-2">
                     <h5 className="font-bold text-purple-900">{a.title}</h5>
-                    <span className="text-xs text-gray-500">{a.date}</span>
+                    <span className="text-xs text-gray-500">
+                      {new Date(a.date).toLocaleDateString()}
+                    </span>
                   </div>
                   <p className="text-gray-700">{a.message}</p>
                 </div>
@@ -485,7 +482,9 @@ export default function AdminDashboard() {
                 <div key={m.id} className="bg-gray-50 p-4 rounded-lg">
                   <p className="font-semibold text-purple-800">{m.subject}</p>
                   <p className="text-sm text-gray-600">To: {m.to}</p>
-                  <p className="text-xs text-gray-500">{m.timestamp}</p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(m.timestamp).toLocaleString()}
+                  </p>
                   <p className="text-sm text-gray-700 mt-2 bg-white p-3 rounded">{m.body}</p>
                 </div>
               ))}
@@ -499,26 +498,10 @@ export default function AdminDashboard() {
         {/* === FEEDBACK TAB === */}
         {activeTab === "feedback" && (
           <div className="space-y-6">
+              {/* Add Feedback */}
             <div className="bg-white p-6 rounded-lg shadow-lg">
-              <h3 className="text-2xl font-bold text-purple-900 mb-4">
-                Add Feedback
-              </h3>
-              <form onSubmit={handleFeedbackSubmit} className="flex gap-2">
-                <textarea
-                  required
-                  placeholder="Write your feedback here..."
-                  value={feedbackForm.text}
-                  onChange={(e) => setFeedbackForm({ text: e.target.value })}
-                  className="flex-1 px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500 outline-none"
-                  rows="3"
-                />
-                <button
-                  type="submit"
-                  className="bg-purple-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-purple-700 transition"
-                >
-                  Send
-                </button>
-              </form>
+              <h3 className="text-2xl font-bold text-purple-900 mb-4">Add Feedback</h3>
+              <FeedbackForm onSubmit={handleFeedbackSubmit} />
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow-lg">
