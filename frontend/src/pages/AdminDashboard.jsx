@@ -1,11 +1,6 @@
 // src/pages/AdminDashboard.jsx
 import { useState, useEffect } from "react";
-import {
-  bookingAPI,
-  announcementAPI,
-  eventAPI,
-  messageAPI,
-} from "../services/api";
+import axiosInstance from "../utils/axiosInstance";
 import {
   Calendar,
   X,
@@ -14,6 +9,7 @@ import {
   PartyPopper,
   Mail,
   LogOut,
+  MessageSquare,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BookingFormModal from "../components/BookingForm";
@@ -22,120 +18,15 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("bookings");
   const [bookings, setBookings] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [showBookingModal, setShowBookingModal] = useState(false);
-  const [newBooking, setNewBooking] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    eventType: "",
-    date: "",
-    guests: "",
-    message: "",
-  });
-
-  const DEFAULT_ANNOUNCEMENTS = [
-    {
-      id: 1,
-      title: "Diwali Special Offer",
-      message:
-        "Book any event in November and get 10% off on catering services! Limited slots available.",
-      date: "2025-10-28",
-    },
-    {
-      id: 2,
-      title: "New Year Grand Celebration",
-      message:
-        "Celebrate New Year 2026 with us! Special packages starting at ₹50,000 for 100 guests.",
-      date: "2025-10-25",
-    },
-    {
-      id: 3,
-      title: "Wedding Season Booking Open",
-      message:
-        "Secure your dream wedding date for 2026. Early bird discounts up to 15%!",
-      date: "2025-10-20",
-    },
-    {
-      id: 4,
-      title: "Corporate Event Package",
-      message:
-        "Host your next seminar or team outing with full AV setup and lunch included.",
-      date: "2025-10-15",
-    },
-    {
-      id: 5,
-      title: "Kids Birthday Bash",
-      message:
-        "Free balloon decoration + themed cake for birthdays booked this month!",
-      date: "2025-10-10",
-    },
-  ];
-
-  const DEFAULT_RECENT_EVENTS = [
-    {
-      id: 1,
-      title: "Rohan & Priya's Wedding",
-      type: "Wedding",
-      date: "15 Oct 2025",
-      guests: 450,
-      description:
-        "A magical evening filled with love, lights, and unforgettable moments.",
-      images: [
-        "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80",
-        "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=800&q=80",
-        "https://images.unsplash.com/photo-1562183241-b937e1de65e4?w=800&q=80",
-      ],
-    },
-    {
-      id: 2,
-      title: "Aarav's 1st Birthday",
-      type: "Birthday Party",
-      date: "08 Oct 2025",
-      guests: 80,
-      description:
-        "Jungle-themed celebration with games, cake smash, and lots of laughter!",
-      images: [
-        "https://images.unsplash.com/photo-1519227353069-5c4d5edd7c22?w=800&q=80",
-        "https://images.unsplash.com/photo-1606983341727-1b4a5f93b1e0?w=800&q=80",
-      ],
-    },
-    {
-      id: 3,
-      title: "TechWave Annual Meet 2025",
-      type: "Office Event",
-      date: "01 Oct 2025",
-      guests: 200,
-      description: "Product launch, awards, and networking dinner.",
-      images: [
-        "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80",
-        "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80",
-      ],
-    },
-    {
-      id: 4,
-      title: "Silver Jubilee Anniversary",
-      type: "Anniversary",
-      date: "25 Sep 2025",
-      guests: 120,
-      description: "25 years of love celebrated with family and close friends.",
-      images: [
-        "https://images.unsplash.com/photo-1606216794074-735e8e0d3d6e?w=800&q=80",
-        "https://images.unsplash.com/photo-1511285567679-09b7d0d5b0c3?w=800&q=80",
-      ],
-    },
-  ];
-
-  const [announcements, setAnnouncements] = useState(DEFAULT_ANNOUNCEMENTS);
-  const [events, setEvents] = useState(DEFAULT_RECENT_EVENTS);
-
   // Forms
-  const [announcementForm, setAnnouncementForm] = useState({
-    title: "",
-    message: "",
-  });
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [announcementForm, setAnnouncementForm] = useState({ title: "", message: "" });
   const [eventForm, setEventForm] = useState({
     title: "",
     type: "",
@@ -145,15 +36,11 @@ export default function AdminDashboard() {
     imageUrls: "",
     videoUrls: "",
   });
+  const [feedbackForm, setFeedbackForm] = useState({ text: "" });
 
-  const eventTypes = [
-    "Wedding",
-    "Birthday Party",
-    "Engagement",
-    "Office Event",
-    "Anniversary",
-  ];
+  const eventTypes = ["Wedding", "Birthday Party", "Engagement", "Office Event", "Anniversary"];
 
+  // Load all data
   useEffect(() => {
     loadAllData();
   }, []);
@@ -161,95 +48,100 @@ export default function AdminDashboard() {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const [bookingsData, eventsData, announcementsData, messagesData] =
-        await Promise.all([
-          bookingAPI.getAll(),
-          eventAPI.getAll(),
-          announcementAPI.getAll(),
-          messageAPI.getAll(),
-        ]);
-      setBookings(bookingsData);
-      setEvents(eventsData);
-      setAnnouncements(announcementsData);
-      setMessages(messagesData);
+      const [
+        bookingsRes,
+        eventsRes,
+        announcementsRes,
+        messagesRes,
+        feedbacksRes,
+      ] = await Promise.all([
+        axiosInstance.get("/bookings"),
+        axiosInstance.get("/events"),
+        axiosInstance.get("/announcements"),
+        axiosInstance.get("/messages"),
+        axiosInstance.get("/feedback"),
+      ]);
+
+      setBookings(bookingsRes.data || []);
+      setEvents(eventsRes.data || []);
+      setAnnouncements(announcementsRes.data || []);
+      setMessages(messagesRes.data || []);
+      setFeedbacks(feedbacksRes.data || []);
     } catch (error) {
       console.error("Error loading data:", error);
-      if (error.response?.status === 401) {
+      if (error.response?.status === 401 || error.response?.status === 403) {
         handleLogout();
       }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("adminToken");
-    delete require("../services/api").default.defaults.headers.common[
-      "Authorization"
-    ];
+    localStorage.clear();
     navigate("/admin/login");
   };
 
+  // === BOOKINGS ===
   const handleApprove = async (id) => {
     try {
-      await bookingAPI.updateStatus(id, "approved");
+      await axiosInstance.patch(`/bookings/${id}/status`, { status: "approved" });
       setBookings((prev) =>
         prev.map((b) => (b.id === id ? { ...b, status: "approved" } : b))
       );
-      alert("Booking approved! Email and SMS sent to customer.");
-    } catch (error) {
-      alert("Failed to approve booking");
+      alert("Booking approved!");
+    } catch (e) {
+      alert("Failed to approve");
     }
   };
 
   const handleReject = async (id) => {
     try {
-      await bookingAPI.updateStatus(id, "rejected");
+      await axiosInstance.patch(`/bookings/${id}/status`, { status: "rejected" });
       setBookings((prev) =>
         prev.map((b) => (b.id === id ? { ...b, status: "rejected" } : b))
       );
-      alert("Booking rejected. Notification sent to customer.");
-    } catch (error) {
-      alert("Failed to reject booking");
+      alert("Booking rejected!");
+    } catch (e) {
+      alert("Failed to reject");
     }
   };
 
+  // === ANNOUNCEMENTS ===
   const handleAnnouncementSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await announcementAPI.create(announcementForm);
+      const res = await axiosInstance.post("/announcements", announcementForm);
       alert(
-        `Announcement published! Emails: ${response.emailsSent}, SMS: ${response.smsSent}`
+        `Announcement published! Emails: ${res.data.emailsSent}, SMS: ${res.data.smsSent}`
       );
       setAnnouncementForm({ title: "", message: "" });
       loadAllData();
-    } catch (error) {
-      alert("Failed to create announcement");
+    } catch (e) {
+      alert("Failed to publish");
     }
   };
 
+  // === EVENTS ===
   const handleEventSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const imageUrls = eventForm.imageUrls
-        .split(",")
-        .map((url) => url.trim())
-        .filter((url) => url);
-      const videoUrls = eventForm.videoUrls
-        .split(",")
-        .map((url) => url.trim())
-        .filter((url) => url);
+    const imageUrls = eventForm.imageUrls
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const videoUrls = eventForm.videoUrls
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
 
-      await eventAPI.create({
-        title: eventForm.title,
-        type: eventForm.type,
-        date: eventForm.date,
+    try {
+      await axiosInstance.post("/events", {
+        ...eventForm,
         guests: parseInt(eventForm.guests),
         images: imageUrls,
         videos: videoUrls,
-        description: eventForm.description,
       });
-
-      alert("Event added successfully!");
+      alert("Event added!");
       setEventForm({
         title: "",
         type: "",
@@ -260,23 +152,48 @@ export default function AdminDashboard() {
         videoUrls: "",
       });
       loadAllData();
-    } catch (error) {
+    } catch (e) {
       alert("Failed to add event");
     }
   };
 
   const handleDeleteEvent = async (id) => {
-    if (window.confirm("Delete this event?")) {
-      try {
-        await eventAPI.delete(id);
-        alert("Event deleted!");
-        loadAllData();
-      } catch (error) {
-        alert("Failed to delete event");
-      }
+    if (!window.confirm("Delete this event?")) return;
+    try {
+      await axiosInstance.delete(`/events/${id}`);
+      alert("Event deleted");
+      loadAllData();
+    } catch (e) {
+      alert("Failed to delete");
     }
   };
 
+  // === FEEDBACK ===
+  const handleFeedbackSubmit = async (e) => {
+    e.preventDefault();
+    if (!feedbackForm.text.trim()) return;
+    try {
+      const res = await axiosInstance.post("/feedback", { text: feedbackForm.text });
+      setFeedbacks((prev) => [...prev, res.data]);
+      setFeedbackForm({ text: "" });
+      alert("Feedback added!");
+    } catch (e) {
+      alert("Failed to add feedback");
+    }
+  };
+
+  const handleDeleteFeedback = async (id) => {
+    if (!window.confirm("Delete this feedback?")) return;
+    try {
+      await axiosInstance.delete(`/feedback/${id}`);
+      setFeedbacks((prev) => prev.filter((f) => f.id !== id));
+      alert("Feedback deleted");
+    } catch (e) {
+      alert("Failed to delete");
+    }
+  };
+
+  // === UI ===
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -288,51 +205,31 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-100 py-20 px-4">
       <div className="container mx-auto">
+
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-4xl font-bold text-purple-900">
-            Admin Dashboard
-          </h2>
-          {/* <button 
+          <h2 className="text-4xl font-bold text-purple-900">Admin Dashboard</h2>
+          <button
             onClick={handleLogout}
-            className="flex items-center gap-2 bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition">
-            <LogOut className="w-5 h-5" />
-            Logout
-          </button> */}
+            className="flex items-center gap-2 bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition"
+          >
+            <LogOut className="w-5 h-5" /> Logout
+          </button>
         </div>
 
         {/* Tabs */}
         <div className="bg-white rounded-xl shadow-lg p-2 flex gap-2 mb-6 overflow-x-auto">
           {[
-            {
-              id: "bookings",
-              label: "Bookings",
-              count: bookings.length,
-              icon: "📅",
-            },
-            {
-              id: "gallery",
-              label: "Gallery",
-              count: events.length,
-              icon: "🖼️",
-            },
-            {
-              id: "announcements",
-              label: "Announcements",
-              count: announcements.length,
-              icon: "📢",
-            },
-            {
-              id: "messages",
-              label: "Messages",
-              count: messages.length,
-              icon: "📧",
-            },
+            { id: "bookings", label: "Bookings", count: bookings.length, icon: <Calendar className="w-5 h-5" /> },
+            { id: "gallery", label: "Gallery", count: events.length, icon: <PartyPopper className="w-5 h-5" /> },
+            { id: "announcements", label: "Announcements", count: announcements.length, icon: <Bell className="w-5 h-5" /> },
+            { id: "messages", label: "Messages", count: messages.length, icon: <Mail className="w-5 h-5" /> },
+            { id: "feedback", label: "Feedback", count: feedbacks.length, icon: <MessageSquare className="w-5 h-5" /> },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition ${
+              className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition flex items-center gap-2 ${
                 activeTab === tab.id
                   ? "bg-purple-600 text-white"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -343,17 +240,16 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* Bookings Tab */}
+        {/* === BOOKINGS TAB === */}
         {activeTab === "bookings" && (
           <div className="space-y-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-2xl font-bold text-purple-900">
-                <Calendar className="inline w-6 h-6 mr-2" />
-                Booking Requests
+                <Calendar className="inline w-6 h-6 mr-2" /> Booking Requests
               </h3>
               <button
                 onClick={() => setShowBookingModal(true)}
-                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition"
+                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
               >
                 + Add Booking
               </button>
@@ -364,71 +260,56 @@ export default function AdminDashboard() {
                 No bookings yet
               </div>
             ) : (
-              bookings.map((booking) => (
-                <div
-                  key={booking.id}
-                  className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition"
-                >
+              bookings.map((b) => (
+                <div key={b.id} className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h4 className="text-xl font-bold text-gray-800">
-                        {booking.name}
-                      </h4>
-                      <p className="text-gray-600">
-                        {booking.email} | {booking.phone}
-                      </p>
+                      <h4 className="text-xl font-bold text-gray-800">{b.name}</h4>
+                      <p className="text-gray-600">{b.email} | {b.phone}</p>
                     </div>
                     <span
                       className={`px-4 py-1 rounded-full text-sm font-semibold ${
-                        booking.status === "approved"
+                        b.status === "approved"
                           ? "bg-green-100 text-green-800"
-                          : booking.status === "rejected"
+                          : b.status === "rejected"
                           ? "bg-red-100 text-red-800"
                           : "bg-yellow-100 text-yellow-800"
                       }`}
                     >
-                      {booking.status?.toUpperCase() || "PENDING"}
+                      {b.status?.toUpperCase() || "PENDING"}
                     </span>
                   </div>
 
                   <div className="grid md:grid-cols-3 gap-4 mb-4">
                     <div>
                       <p className="text-sm text-gray-600">Event Type</p>
-                      <p className="font-semibold text-purple-900">
-                        {booking.eventType}
-                      </p>
+                      <p className="font-semibold text-purple-900">{b.eventType}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Date</p>
-                      <p className="font-semibold text-purple-900">
-                        {booking.date}
-                      </p>
+                      <p className="font-semibold text-purple-900">{b.date}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Guests</p>
-                      <p className="font-semibold text-purple-900">
-                        {booking.guests}
-                      </p>
+                      <p className="font-semibold text-purple-900">{b.guests}</p>
                     </div>
                   </div>
 
-                  {booking.message && (
-                    <p className="text-gray-600 mb-4 italic">
-                      "{booking.message}"
-                    </p>
+                  {b.message && (
+                    <p className="text-gray-600 mb-4 italic">"{b.message}"</p>
                   )}
 
-                  {booking.status === "pending" && (
+                  {b.status === "pending" && (
                     <div className="flex gap-4">
                       <button
-                        onClick={() => handleApprove(booking.id)}
-                        className="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2"
+                        onClick={() => handleApprove(b.id)}
+                        className="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 flex items-center justify-center gap-2"
                       >
                         <CheckCircle className="w-5 h-5" /> Approve
                       </button>
                       <button
-                        onClick={() => handleReject(booking.id)}
-                        className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition flex items-center justify-center gap-2"
+                        onClick={() => handleReject(b.id)}
+                        className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 flex items-center justify-center gap-2"
                       >
                         <X className="w-5 h-5" /> Reject
                       </button>
@@ -440,14 +321,12 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Gallery Tab */}
+        {/* === GALLERY TAB === */}
         {activeTab === "gallery" && (
           <div className="space-y-6">
-            {/* Add Event Form */}
             <div className="bg-white p-6 rounded-lg shadow-lg">
               <h3 className="text-2xl font-bold text-purple-900 mb-4">
-                <PartyPopper className="inline w-6 h-6 mr-2" />
-                Add Event to Gallery
+                <PartyPopper className="inline w-6 h-6 mr-2" /> Add Event to Gallery
               </h3>
               <form onSubmit={handleEventSubmit} className="space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">
@@ -456,23 +335,19 @@ export default function AdminDashboard() {
                     required
                     placeholder="Event Title"
                     value={eventForm.title}
-                    onChange={(e) =>
-                      setEventForm({ ...eventForm, title: e.target.value })
-                    }
+                    onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
                     className="px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500 outline-none"
                   />
                   <select
                     required
                     value={eventForm.type}
-                    onChange={(e) =>
-                      setEventForm({ ...eventForm, type: e.target.value })
-                    }
+                    onChange={(e) => setEventForm({ ...eventForm, type: e.target.value })}
                     className="px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500 outline-none"
                   >
                     <option value="">Select Event Type</option>
-                    {eventTypes.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
+                    {eventTypes.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
                       </option>
                     ))}
                   </select>
@@ -480,9 +355,7 @@ export default function AdminDashboard() {
                     type="date"
                     required
                     value={eventForm.date}
-                    onChange={(e) =>
-                      setEventForm({ ...eventForm, date: e.target.value })
-                    }
+                    onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })}
                     className="px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500 outline-none"
                   />
                   <input
@@ -490,9 +363,7 @@ export default function AdminDashboard() {
                     required
                     placeholder="Guests"
                     value={eventForm.guests}
-                    onChange={(e) =>
-                      setEventForm({ ...eventForm, guests: e.target.value })
-                    }
+                    onChange={(e) => setEventForm({ ...eventForm, guests: e.target.value })}
                     className="px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500 outline-none"
                   />
                 </div>
@@ -500,9 +371,7 @@ export default function AdminDashboard() {
                   required
                   placeholder="Description"
                   value={eventForm.description}
-                  onChange={(e) =>
-                    setEventForm({ ...eventForm, description: e.target.value })
-                  }
+                  onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
                   className="w-full px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500 outline-none"
                   rows="3"
                 />
@@ -510,18 +379,14 @@ export default function AdminDashboard() {
                   type="text"
                   placeholder="Image URLs (comma separated)"
                   value={eventForm.imageUrls}
-                  onChange={(e) =>
-                    setEventForm({ ...eventForm, imageUrls: e.target.value })
-                  }
+                  onChange={(e) => setEventForm({ ...eventForm, imageUrls: e.target.value })}
                   className="w-full px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500 outline-none"
                 />
                 <input
                   type="text"
                   placeholder="Video URLs (YouTube embed)"
                   value={eventForm.videoUrls}
-                  onChange={(e) =>
-                    setEventForm({ ...eventForm, videoUrls: e.target.value })
-                  }
+                  onChange={(e) => setEventForm({ ...eventForm, videoUrls: e.target.value })}
                   className="w-full px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500 outline-none"
                 />
                 <button
@@ -533,38 +398,28 @@ export default function AdminDashboard() {
               </form>
             </div>
 
-            {/* Events List */}
             <div className="bg-white p-6 rounded-lg shadow-lg">
-              <h3 className="text-2xl font-bold text-purple-900 mb-4">
-                Manage Events
-              </h3>
+              <h3 className="text-2xl font-bold text-purple-900 mb-4">Manage Events</h3>
               <div className="grid md:grid-cols-2 gap-4">
-                {events.map((event) => (
-                  <div
-                    key={event.id}
-                    className="border-2 border-purple-200 rounded-lg p-4"
-                  >
+                {events.map((ev) => (
+                  <div key={ev.id} className="border-2 border-purple-200 rounded-lg p-4">
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <h4 className="font-bold text-gray-800">
-                          {event.title}
-                        </h4>
-                        <p className="text-sm text-purple-600">{event.type}</p>
+                        <h4 className="font-bold text-gray-800">{ev.title}</h4>
+                        <p className="text-sm text-purple-600">{ev.type}</p>
                       </div>
                       <button
-                        onClick={() => handleDeleteEvent(event.id)}
+                        onClick={() => handleDeleteEvent(ev.id)}
                         className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
                       >
                         Delete
                       </button>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">
-                      {event.description}
-                    </p>
+                    <p className="text-sm text-gray-600 mb-2">{ev.description}</p>
                     <div className="flex gap-4 text-xs text-gray-500">
-                      <span>📅 {event.date}</span>
-                      <span>👥 {event.guests}</span>
-                      <span>🖼️ {event.images?.length || 0}</span>
+                      <span>Date: {ev.date}</span>
+                      <span>Guests: {ev.guests}</span>
+                      <span>Images: {ev.images?.length || 0}</span>
                     </div>
                   </div>
                 ))}
@@ -573,40 +428,26 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Announcements Tab */}
+        {/* === ANNOUNCEMENTS TAB === */}
         {activeTab === "announcements" && (
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h3 className="text-2xl font-bold text-purple-900 mb-4">
-              <Bell className="inline w-6 h-6 mr-2" />
-              Create Announcement
+              <Bell className="inline w-6 h-6 mr-2" /> Create Announcement
             </h3>
-            <form
-              onSubmit={handleAnnouncementSubmit}
-              className="space-y-4 mb-8"
-            >
+            <form onSubmit={handleAnnouncementSubmit} className="space-y-4 mb-8">
               <input
                 type="text"
                 required
                 placeholder="Title"
                 value={announcementForm.title}
-                onChange={(e) =>
-                  setAnnouncementForm({
-                    ...announcementForm,
-                    title: e.target.value,
-                  })
-                }
+                onChange={(e) => setAnnouncementForm({ ...announcementForm, title: e.target.value })}
                 className="w-full px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500 outline-none"
               />
               <textarea
                 required
                 placeholder="Message"
                 value={announcementForm.message}
-                onChange={(e) =>
-                  setAnnouncementForm({
-                    ...announcementForm,
-                    message: e.target.value,
-                  })
-                }
+                onChange={(e) => setAnnouncementForm({ ...announcementForm, message: e.target.value })}
                 className="w-full px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500 outline-none"
                 rows="4"
               />
@@ -614,53 +455,112 @@ export default function AdminDashboard() {
                 type="submit"
                 className="w-full bg-purple-600 text-white py-3 rounded-lg font-bold hover:bg-purple-700 transition"
               >
-                📢 Publish (Email + SMS to all)
+                Publish (Email + SMS to all)
               </button>
             </form>
 
             <h4 className="text-xl font-bold text-purple-900 mb-4">Recent</h4>
             <div className="space-y-3">
-              {announcements.map((ann) => (
-                <div key={ann.id} className="bg-purple-50 p-4 rounded-lg">
+              {announcements.map((a) => (
+                <div key={a.id} className="bg-purple-50 p-4 rounded-lg">
                   <div className="flex justify-between mb-2">
-                    <h5 className="font-bold text-purple-900">{ann.title}</h5>
-                    <span className="text-xs text-gray-500">{ann.date}</span>
+                    <h5 className="font-bold text-purple-900">{a.title}</h5>
+                    <span className="text-xs text-gray-500">{a.date}</span>
                   </div>
-                  <p className="text-gray-700">{ann.message}</p>
+                  <p className="text-gray-700">{a.message}</p>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Messages Tab */}
+        {/* === MESSAGES TAB === */}
         {activeTab === "messages" && (
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h3 className="text-2xl font-bold text-purple-900 mb-4">
-              <Mail className="inline w-6 h-6 mr-2" />
-              All Messages
+              <Mail className="inline w-6 h-6 mr-2" /> All Messages
             </h3>
             <div className="space-y-3">
-              {messages.map((msg) => (
-                <div key={msg.id} className="bg-gray-50 p-4 rounded-lg">
-                  <p className="font-semibold text-purple-800">{msg.subject}</p>
-                  <p className="text-sm text-gray-600">To: {msg.to}</p>
-                  <p className="text-xs text-gray-500">{msg.timestamp}</p>
-                  <p className="text-sm text-gray-700 mt-2 bg-white p-3 rounded">
-                    {msg.body}
-                  </p>
+              {messages.map((m) => (
+                <div key={m.id} className="bg-gray-50 p-4 rounded-lg">
+                  <p className="font-semibold text-purple-800">{m.subject}</p>
+                  <p className="text-sm text-gray-600">To: {m.to}</p>
+                  <p className="text-xs text-gray-500">{m.timestamp}</p>
+                  <p className="text-sm text-gray-700 mt-2 bg-white p-3 rounded">{m.body}</p>
                 </div>
               ))}
               {messages.length === 0 && (
-                <p className="text-center text-gray-500 py-8">
-                  No messages yet
-                </p>
+                <p className="text-center text-gray-500 py-8">No messages yet</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* === FEEDBACK TAB === */}
+        {activeTab === "feedback" && (
+          <div className="space-y-6">
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              <h3 className="text-2xl font-bold text-purple-900 mb-4">
+                Add Feedback
+              </h3>
+              <form onSubmit={handleFeedbackSubmit} className="flex gap-2">
+                <textarea
+                  required
+                  placeholder="Write your feedback here..."
+                  value={feedbackForm.text}
+                  onChange={(e) => setFeedbackForm({ text: e.target.value })}
+                  className="flex-1 px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500 outline-none"
+                  rows="3"
+                />
+                <button
+                  type="submit"
+                  className="bg-purple-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-purple-700 transition"
+                >
+                  Send
+                </button>
+              </form>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              <h3 className="text-2xl font-bold text-purple-900 mb-4">
+                All Feedback
+              </h3>
+              {feedbacks.length === 0 ? (
+                <p className="text-center text-gray-500 py-8">No feedback yet</p>
+              ) : (
+                <div className="space-y-3">
+                  {feedbacks.map((fb) => (
+                    <div
+                      key={fb.id}
+                      className="bg-purple-50 p-4 rounded-lg flex justify-between items-start"
+                    >
+                      <div className="flex-1">
+                        <p className="text-gray-800">{fb.text}</p>
+                        {fb.createdAt && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(fb.createdAt).toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleDeleteFeedback(fb.id)}
+                        className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>
         )}
       </div>
-      <BookingFormModal show={showBookingModal} onClose={() => setShowBookingModal(false)} />
+
+      <BookingFormModal
+        show={showBookingModal}
+        onClose={() => setShowBookingModal(false)}
+      />
     </div>
   );
 }

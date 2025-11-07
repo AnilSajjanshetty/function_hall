@@ -5,6 +5,7 @@ const eventController = require('../controllers/eventController');
 const { authenticate, authorizeAdmin } = require('../middleware/auth'); // ✅ Correct import
 
 // Public routes
+router.get("/latest", eventController.getLatestEvents);
 router.get('/', eventController.getAllEvents);
 router.get('/:id', eventController.getEventById);
 
@@ -12,5 +13,4 @@ router.get('/:id', eventController.getEventById);
 router.post('/', authenticate, authorizeAdmin, eventController.createEvent);
 router.put('/:id', authenticate, authorizeAdmin, eventController.updateEvent);
 router.delete('/:id', authenticate, authorizeAdmin, eventController.deleteEvent);
-
 module.exports = router;

@@ -19,6 +19,24 @@ exports.getAllAnnouncements = async (req, res, next) => {
     next(error);
   }
 };
+// Fetch latest 5 announcements
+exports.getLatestAnnouncements = async (req, res, next) => {
+  try {
+    const latestAnnouncements = await Announcement.find()
+      .sort({ date: -1 })
+      .limit(5)
+      .lean();
+
+    if (!latestAnnouncements.length) {
+      return res.status(404).json({ message: "No announcements found" });
+    }
+
+    res.status(200).json(latestAnnouncements);
+  } catch (error) {
+    console.error("Error fetching latest announcements:", error);
+    next(error);
+  }
+};
 
 /**
  * POST /api/announcements

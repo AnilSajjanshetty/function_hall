@@ -6,6 +6,7 @@ const { authenticate,authorizeAdmin } = require('../middleware/auth');
 // Public routes
 router.get('/', announcementController.getAllAnnouncements);
 // router.get('/:id', announcementController.getAnnouncementById);
+router.get("/latest", announcementController.getLatestAnnouncements);
 
 // Protected routes (admin only)
 router.post('/', authenticate,authorizeAdmin, announcementController.createAnnouncement);

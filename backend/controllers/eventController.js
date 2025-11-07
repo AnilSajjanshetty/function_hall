@@ -13,6 +13,24 @@ exports.getAllEvents = async (req, res, next) => {
     next(error);
   }
 };
+// Fetch latest 5 events
+exports.getLatestEvents = async (req, res, next) => {
+  try {
+    const latestEvents = await Event.find()
+      .sort({ date: -1 })
+      .limit(5)
+      .lean();
+
+    if (!latestEvents.length) {
+      return res.status(404).json({ message: "No events found" });
+    }
+
+    res.status(200).json(latestEvents);
+  } catch (error) {
+    console.error("Error fetching latest events:", error);
+    next(error);
+  }
+};
 
 exports.getEventById = async (req, res, next) => {
   try {
