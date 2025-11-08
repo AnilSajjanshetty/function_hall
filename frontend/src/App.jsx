@@ -14,11 +14,11 @@ import RegisterPage from "./pages/RegisterPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import { useEffect, useState } from "react";
 import UserDashboard from "./pages/UserDashboard";
+import config from "../config";
 
 // Define allowed roles
-const adminRole = "admin";
-const userRole = "user";
-
+const adminRole = config.adminRole
+const userRole = config.userRole
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(
     localStorage.getItem("accessToken")
@@ -28,7 +28,7 @@ function App() {
   useEffect(() => {
     const handleStorageChange = () => {
       setIsLoggedIn(!!localStorage.getItem("accessToken"));
-     setRole(localStorage.getItem("role") || "");
+      setRole(localStorage.getItem("role") || "");
     };
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
@@ -61,7 +61,7 @@ function App() {
             }
           />
 
-           {/* Protected admin route */}
+          {/* Protected admin route */}
           <Route
             path="/user"
             element={

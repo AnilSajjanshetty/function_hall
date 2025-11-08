@@ -1,5 +1,7 @@
 // src/components/FeedbackForm.jsx
 import { useState } from "react";
+import config from "../../config";
+import { useEffect } from "react";
 
 export default function FeedbackForm({ onSubmit, initial = {} }) {
   const [form, setForm] = useState({
@@ -8,6 +10,18 @@ export default function FeedbackForm({ onSubmit, initial = {} }) {
     rating: initial.rating || 5,
     text: initial.text || "",
   });
+
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user && user.role == config.userRole) {
+      setForm((prev) => ({
+        ...prev,
+        username: user.username || "",
+        email: user.email || "",
+      }));
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -24,15 +38,17 @@ export default function FeedbackForm({ onSubmit, initial = {} }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <input
+        disabled={true}
         type="text"
         name="name"
         required
         placeholder="Your Name"
-        value={form.name}
+        value={form.username}
         onChange={handleChange}
         className="w-full px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500 outline-none"
       />
       <input
+        disabled={true}
         type="email"
         name="email"
         required

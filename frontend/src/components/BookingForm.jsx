@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import axiosInstance from "../utils/axiosInstance"; // for POST request
 
-const BookingFormModal = ({ show, onClose }) => {
+const BookingFormModal = ({ show, onClose, onBookingSuccess }) => {
   const [bookingForm, setBookingForm] = useState({
     name: "",
     email: "",
@@ -20,19 +21,37 @@ const BookingFormModal = ({ show, onClose }) => {
     { id: 5, name: "Anniversary" },
   ];
 
-  const handleSubmit = (e) => {
+  // Prefill name and email from localStorage
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user) {
+      setBookingForm((prev) => ({
+        ...prev,
+        name: user.username || "",
+        email: user.email || "",
+      }));
+    }
+  }, []);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert("Booking request submitted successfully!");
-    setBookingForm({
-      name: "",
-      email: "",
-      phone: "",
-      eventType: "",
-      date: "",
-      guests: "",
-      message: "",
-    });
-    onClose();
+    try {
+      const response = await axiosInstance.post("/bookings", bookingForm);
+      alert("Booking request submitted successfully!");
+      setBookingForm({
+        ...bookingForm,
+        phone: "",
+        eventType: "",
+        date: "",
+        guests: "",
+        message: "",
+      });
+      if (onBookingSuccess) onBookingSuccess(response.data);
+      onClose();
+    } catch (error) {
+      console.error("Error submitting booking:", error);
+      alert("Failed to submit booking!");
+    }
   };
 
   if (!show) return null;
@@ -59,10 +78,8 @@ const BookingFormModal = ({ show, onClose }) => {
               required
               placeholder="Full Name"
               value={bookingForm.name}
-              onChange={(e) =>
-                setBookingForm({ ...bookingForm, name: e.target.value })
-              }
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 outline-none"
+              disabled
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100 cursor-not-allowed"
             />
 
             <input
@@ -70,10 +87,8 @@ const BookingFormModal = ({ show, onClose }) => {
               required
               placeholder="Email"
               value={bookingForm.email}
-              onChange={(e) =>
-                setBookingForm({ ...bookingForm, email: e.target.value })
-              }
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-600 outline-none"
+              disabled
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100 cursor-not-allowed"
             />
 
             <input

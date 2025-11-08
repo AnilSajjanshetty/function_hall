@@ -34,10 +34,7 @@ export default function Navigation({ isLoggedIn, setIsLoggedIn, role }) {
   };
 
   const navItems = [
-    {
-      path: isLoggedIn ? `/${role}` : "/",
-      label: t("home"),
-    },
+    { path: "/", label: t("home") }, // keep home as "/"
     { path: "/events", label: t("events") },
     { path: "/gallery", label: t("gallery") },
     { path: "/services", label: t("services") },
@@ -45,6 +42,7 @@ export default function Navigation({ isLoggedIn, setIsLoggedIn, role }) {
     { path: "/contact", label: t("contact") },
     ...(isLoggedIn ? [{ path: `/${role}`, label: t("dashboard") }] : []),
   ];
+
 
   const isActive = (path) => location.pathname === path;
 
