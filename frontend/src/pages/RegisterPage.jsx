@@ -56,11 +56,11 @@ export default function RegisterPage() {
   };
 
   return (
-  
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 to-pink-900 flex items-center justify-center px-4">
+
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 to-pink-900 flex items-center justify-center px-4 pt-20">
       <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
         <h2 className="text-3xl font-bold mb-6 text-center text-blue-900">Register</h2>
-        
+
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
@@ -113,7 +113,7 @@ export default function RegisterPage() {
             required
             minLength={6}
           />
-          
+
           {/* Password match indicator */}
           {form.password && form.confirmPassword && (
             <div className={`mb-4 text-sm ${form.password === form.confirmPassword ? 'text-green-600' : 'text-red-600'}`}>
@@ -128,15 +128,15 @@ export default function RegisterPage() {
             {loading ? 'Registering...' : 'Register'}
           </button>
         </form>
-        
-             {/* 🔹 Login link */}
+
+        {/* 🔹 Login link */}
         <p className="text-center text-gray-600 mt-6">
-          Already have an account?   
+          Already have an account?
           <Link
             to="/login"
             className="text-purple-600 font-semibold hover:underline"
           >
-             Login
+            Login
           </Link>
         </p>
       </div>

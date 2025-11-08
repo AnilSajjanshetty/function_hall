@@ -1,18 +1,18 @@
 // src/pages/UserDashboard.jsx
 import { useState, useEffect } from "react";
-import { Calendar, LogOut, Plus } from "lucide-react";
-import { useNavigate, Link } from "react-router-dom";
+import { Calendar, Plus, MessageSquare } from "lucide-react";
 import axiosInstance from "../utils/axiosInstance";
 import { useTranslation } from "react-i18next";
 import BookingFormModal from "../components/BookingForm";
+import FeedbackForm from "../components/FeedbackForm"; // ✅ make sure this exists
 
 export default function UserDashboard() {
-  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { t } = useTranslation(); // 👈 use i18n hook
-
+  const { t } = useTranslation();
   const [showModal, setShowModal] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   const loadBookings = async () => {
     setLoading(true);
@@ -29,38 +29,49 @@ export default function UserDashboard() {
     loadBookings();
   }, []);
 
+  const handleFeedbackClick = (booking) => {
+    setSelectedBooking(booking);
+    setShowFeedbackModal(true);
+  };
+
+  const isEventCompleted = (date) => {
+    try {
+      const eventDate = new Date(date);
+      const today = new Date();
+      return eventDate < today;
+    } catch {
+      return false;
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center overflow-x-hidden">
         <div className="text-2xl text-purple-900">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-20 px-4">
-      <div className="container mx-auto">
+    <div className="min-h-screen bg-gray-100 py-20 px-4 overflow-x-hidden">
+      <div className="max-w-6xl mx-auto w-full overflow-x-hidden">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-4xl font-bold text-purple-900">My Dashboard</h2>
+        <div className="flex justify-between items-center mb-8 flex-col sm:flex-row gap-4 text-center sm:text-left">
+          <h4 className="text-2xl font-bold text-purple-900">User Dashboard</h4>
         </div>
 
         {/* Tabs - Only Bookings */}
-        <div className="bg-white rounded-xl shadow-lg p-2 flex flex-wrap gap-2 mb-6 justify-between items-center">
-          <div>
-            <button className="px-6 py-3 rounded-lg font-semibold bg-purple-600 text-white">
-              {t("bookings")} ({bookings?.length})
-            </button>
-          </div>
+        <div className="bg-white rounded-xl shadow-lg p-3 flex flex-wrap gap-2 mb-6 justify-between items-center">
+          <button className="px-6 py-3 rounded-lg font-semibold bg-purple-600 text-white">
+            {t("bookings")} ({bookings?.length})
+          </button>
 
-          <div>
-              <button
-                onClick={() => setShowModal(true)}
-                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition"
-              >
-                + Add Booking
-              </button>
-          </div>
+          <button
+            onClick={() => setShowModal(true)}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition"
+          >
+            + Add Booking
+          </button>
         </div>
 
         {/* Bookings Content */}
@@ -77,7 +88,7 @@ export default function UserDashboard() {
                 Start planning your event today!
               </p>
               <button
-            onClick={() => setShowModal(true)}
+                onClick={() => setShowModal(true)}
                 className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-full font-bold hover:shadow-lg transform hover:scale-105 transition"
               >
                 <Plus className="w-5 h-5" />
@@ -90,7 +101,7 @@ export default function UserDashboard() {
                 key={booking?.id}
                 className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition"
               >
-                <div className="flex justify-between items-start mb-4">
+                <div className="flex justify-between items-start mb-4 flex-wrap gap-2">
                   <div>
                     <h4 className="text-xl font-bold text-gray-800">
                       {booking?.name}
@@ -100,19 +111,18 @@ export default function UserDashboard() {
                     </p>
                   </div>
                   <span
-                    className={`px-4 py-1 rounded-full text-sm font-semibold ${
-                      booking?.status === "approved"
-                        ? "bg-green-100 text-green-800"
-                        : booking?.status === "rejected"
+                    className={`px-4 py-1 rounded-full text-sm font-semibold ${booking?.status === "approved"
+                      ? "bg-green-100 text-green-800"
+                      : booking?.status === "rejected"
                         ? "bg-red-100 text-red-800"
                         : "bg-yellow-100 text-yellow-800"
-                    }`}
+                      }`}
                   >
                     {booking?.status?.toUpperCase() || "PENDING"}
                   </span>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-4 mb-4">
+                <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                   <div>
                     <p className="text-sm text-gray-600">Event Type</p>
                     <p className="font-semibold text-purple-900">
@@ -138,12 +148,35 @@ export default function UserDashboard() {
                     "{booking?.message}"
                   </p>
                 )}
+
+                {/* ✅ Show Feedback button only if approved and date passed */}
+                {booking?.status === "approved" &&
+                  isEventCompleted(booking?.date) && (
+                    <button
+                      onClick={() => handleFeedbackClick(booking)}
+                      className="mt-2 inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-purple-600 text-white px-5 py-2 rounded-full font-semibold hover:shadow-lg hover:scale-105 transition"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      Give Feedback
+                    </button>
+                  )}
               </div>
             ))
           )}
         </div>
       </div>
+
+      {/* Booking Form Modal */}
       <BookingFormModal show={showModal} onClose={() => setShowModal(false)} />
+
+      {/* Feedback Modal */}
+      {showFeedbackModal && selectedBooking && (
+        <FeedbackForm
+          booking={selectedBooking}
+          show={showFeedbackModal}
+          onClose={() => setShowFeedbackModal(false)}
+        />
+      )}
     </div>
   );
 }

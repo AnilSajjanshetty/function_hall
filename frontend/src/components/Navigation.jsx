@@ -10,19 +10,19 @@ export default function Navigation({ isLoggedIn, setIsLoggedIn, role }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  console.log("role in nav:", role);
-  // track scroll for background
+
+  // Track scroll for navbar background
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // ✅ Check login status whenever route changes
+  // Check login on route change
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     setIsLoggedIn(!!token);
-  }, [location]);
+  }, [location, setIsLoggedIn]);
 
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
@@ -42,7 +42,6 @@ export default function Navigation({ isLoggedIn, setIsLoggedIn, role }) {
     { path: "/gallery", label: t("gallery") },
     { path: "/services", label: t("services") },
     { path: "/announcements", label: t("announcement") },
-    // { path: "/booking", label: t("bookNow") },
     { path: "/contact", label: t("contact") },
     ...(isLoggedIn ? [{ path: `/${role}`, label: t("dashboard") }] : []),
   ];
@@ -51,13 +50,14 @@ export default function Navigation({ isLoggedIn, setIsLoggedIn, role }) {
 
   return (
     <nav
-      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        scrollY > 50
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 overflow-x-hidden 
+      ${scrollY > 50
           ? "bg-purple-900/95 backdrop-blur-lg shadow-lg"
           : "bg-purple-900/95 backdrop-blur-lg shadow-lg"
-      }`}
+        }`}
     >
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+        {/* Logo */}
         <Link to="/" className="flex items-center space-x-2">
           <Sparkles className="w-8 h-8 text-pink-400" />
           <span className="text-2xl font-bold text-white">
@@ -65,15 +65,14 @@ export default function Navigation({ isLoggedIn, setIsLoggedIn, role }) {
           </span>
         </Link>
 
-        {/* Desktop Menu */}
-        <div className="hidden md:flex space-x-6 items-center">
+        {/* Desktop Menu (≥1024px) */}
+        <div className="hidden lg:flex space-x-6 items-center">
           {navItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`text-white hover:text-pink-300 transition ${
-                isActive(item.path) ? "font-bold" : ""
-              }`}
+              className={`text-white hover:text-pink-300 transition 
+                ${isActive(item.path) ? "font-bold" : ""}`}
             >
               {item.label}
             </Link>
@@ -84,20 +83,13 @@ export default function Navigation({ isLoggedIn, setIsLoggedIn, role }) {
               className="flex items-center gap-2 bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition"
             >
               <LogOut className="w-4 h-4" />
-              <span>{t("logout")}</span>
             </button>
           ) : (
             <>
-              <Link
-                to="/login"
-                className="text-white hover:text-pink-300 text-sm"
-              >
+              <Link to="/login" className="text-white hover:text-pink-300 text-sm">
                 {t("login")}
               </Link>
-              <Link
-                to="/register"
-                className="text-white hover:text-pink-300 text-sm"
-              >
+              <Link to="/register" className="text-white hover:text-pink-300 text-sm">
                 {t("register")}
               </Link>
             </>
@@ -105,25 +97,25 @@ export default function Navigation({ isLoggedIn, setIsLoggedIn, role }) {
           <LanguageSwitcher />
         </div>
 
-        {/* Mobile Menu Button */}
+        {/* Mobile & Tablet Hamburger (<1024px) */}
         <button
           onClick={() => setShowMobileMenu(!showMobileMenu)}
-          className="md:hidden text-white"
+          className="lg:hidden text-white"
         >
-          {showMobileMenu ? <X /> : <Menu />}
+          {showMobileMenu ? <X size={28} /> : <Menu size={28} />}
         </button>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile/Tablet Menu */}
       {showMobileMenu && (
-        <div className="md:hidden bg-purple-900/95 backdrop-blur-lg">
+        <div className="lg:hidden bg-purple-900/95 backdrop-blur-lg">
           <div className="flex flex-col space-y-4 px-4 py-6">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
                 onClick={() => setShowMobileMenu(false)}
-                className="text-white text-left"
+                className="text-white text-left text-lg"
               >
                 {item.label}
               </Link>
@@ -135,7 +127,7 @@ export default function Navigation({ isLoggedIn, setIsLoggedIn, role }) {
                   handleLogout();
                   setShowMobileMenu(false);
                 }}
-                className="flex items-center gap-2  bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition"
+                className="flex items-center gap-2 bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition"
               >
                 <LogOut className="w-4 h-4" />
                 <span>{t("logout")}</span>

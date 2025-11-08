@@ -195,22 +195,16 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-20 px-4">
-      <div className="container mx-auto">
+    <div className="min-h-screen bg-gray-100 pt-20 px-4 overflow-x-hidden">
+      <div className="container mx-auto overflow-x-hidden">
 
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-4xl font-bold text-purple-900">Admin Dashboard</h2>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition"
-          >
-            <LogOut className="w-5 h-5" /> Logout
-          </button>
+        <div className="flex justify-between items-center mb-3 flex-col sm:flex-row gap-4">
+          <h4 className="text-2xl font-bold text-purple-900">Dashboard</h4>
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-lg p-2 flex gap-2 mb-6 overflow-x-auto">
+        <div className="bg-white rounded-xl shadow-lg p-2 flex flex-wrap gap-2 mb-6">
           {[
             { id: "bookings", label: "Bookings", count: bookings.length, icon: <Calendar className="w-5 h-5" /> },
             { id: "gallery", label: "Gallery", count: events.length, icon: <PartyPopper className="w-5 h-5" /> },
@@ -221,11 +215,10 @@ export default function AdminDashboard() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition flex items-center gap-2 ${
-                activeTab === tab.id
-                  ? "bg-purple-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+              className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition flex items-center gap-2 ${activeTab === tab.id
+                ? "bg-purple-600 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
             >
               {tab.icon} {tab.label} ({tab.count})
             </button>
@@ -234,8 +227,8 @@ export default function AdminDashboard() {
 
         {/* === BOOKINGS TAB === */}
         {activeTab === "bookings" && (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center mb-4">
+          <div className="space-y-4 overflow-x-hidden">
+            <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
               <h3 className="text-2xl font-bold text-purple-900">
                 <Calendar className="inline w-6 h-6 mr-2" /> Booking Requests
               </h3>
@@ -252,24 +245,20 @@ export default function AdminDashboard() {
                 No bookings yet
               </div>
             ) : (
-
-              
-              bookings?.map((b) => (
+              bookings.map((b) => (
                 <div key={b.id} className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition">
-                  {console.log(bookings) }
-                  <div className="flex justify-between items-start mb-4">
+                  <div className="flex justify-between items-start mb-4 flex-wrap gap-2">
                     <div>
                       <h4 className="text-xl font-bold text-gray-800">{b.name}</h4>
                       <p className="text-gray-600">{b.email} | {b.phone}</p>
                     </div>
                     <span
-                      className={`px-4 py-1 rounded-full text-sm font-semibold ${
-                        b.status === "approved"
-                          ? "bg-green-100 text-green-800"
-                          : b.status === "rejected"
+                      className={`px-4 py-1 rounded-full text-sm font-semibold ${b.status === "approved"
+                        ? "bg-green-100 text-green-800"
+                        : b.status === "rejected"
                           ? "bg-red-100 text-red-800"
                           : "bg-yellow-100 text-yellow-800"
-                      }`}
+                        }`}
                     >
                       {b.status?.toUpperCase() || "PENDING"}
                     </span>
@@ -295,7 +284,7 @@ export default function AdminDashboard() {
                   )}
 
                   {b.status === "pending" && (
-                    <div className="flex gap-4">
+                    <div className="flex gap-4 flex-wrap">
                       <button
                         onClick={() => handleApprove(b.id)}
                         className="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 flex items-center justify-center gap-2"
@@ -315,7 +304,6 @@ export default function AdminDashboard() {
             )}
           </div>
         )}
-
         {/* === GALLERY TAB === */}
         {activeTab === "gallery" && (
           <div className="space-y-6">
@@ -498,7 +486,7 @@ export default function AdminDashboard() {
         {/* === FEEDBACK TAB === */}
         {activeTab === "feedback" && (
           <div className="space-y-6">
-              {/* Add Feedback */}
+            {/* Add Feedback */}
             <div className="bg-white p-6 rounded-lg shadow-lg">
               <h3 className="text-2xl font-bold text-purple-900 mb-4">Add Feedback</h3>
               <FeedbackForm onSubmit={handleFeedbackSubmit} />
