@@ -16,9 +16,11 @@ export default function UserDashboard() {
 
   // ✅ Load bookings only
   const loadBookings = async () => {
+    const user = JSON.parse(localStorage.getItem("user"))
+
     setLoading(true);
     try {
-      const response = await axiosInstance.get("/bookings");
+      const response = await axiosInstance.get(`/bookings/${user?.id}`);
       setBookings(response.data || []);
     } catch (error) {
       console.error("Error fetching bookings:", error);
@@ -151,7 +153,7 @@ export default function UserDashboard() {
                 )}
 
                 {/* Feedback button only if approved and event date passed */}
-                {booking?.status === "approved" &&
+                {booking?.status === "approved" && !bookings.feedbackGiven &&
                   isEventCompleted(booking?.date) && (
                     <button
                       onClick={() => handleFeedbackClick(booking)}

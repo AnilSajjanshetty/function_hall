@@ -57,20 +57,20 @@ export default function AdminDashboard() {
         eventsRes,
         announcementsRes,
         messagesRes,
-        // feedbacksRes,
+        feedbacksRes,
       ] = await Promise.all([
         axiosInstance.get("/bookings"),
         axiosInstance.get("/events"),
         axiosInstance.get("/announcements"), // ← FIXED
         axiosInstance.get("/messages"),
-        // axiosInstance.get("/feedback"),
+        axiosInstance.get("/feedback"),
       ]);
 
       setBookings(normalize(bookingsRes.data));
       setEvents(normalize(eventsRes.data));
       setAnnouncements(normalize(announcementsRes.data));
       setMessages(normalize(messagesRes.data));
-      // setFeedbacks(normalize(feedbacksRes.data));
+      setFeedbacks(normalize(feedbacksRes.data.data));
     } catch (error) {
       console.error("Error loading data:", error);
       if (error.response?.status === 401 || error.response?.status === 403) {
@@ -487,10 +487,10 @@ export default function AdminDashboard() {
         {activeTab === "feedback" && (
           <div className="space-y-6">
             {/* Add Feedback */}
-            <div className="bg-white p-6 rounded-lg shadow-lg">
+            {/* <div className="bg-white p-6 rounded-lg shadow-lg">
               <h3 className="text-2xl font-bold text-purple-900 mb-4">Add Feedback</h3>
               <FeedbackForm onSubmit={handleFeedbackSubmit} />
-            </div>
+            </div> */}
 
             <div className="bg-white p-6 rounded-lg shadow-lg">
               <h3 className="text-2xl font-bold text-purple-900 mb-4">
@@ -502,7 +502,7 @@ export default function AdminDashboard() {
                 <div className="space-y-3">
                   {feedbacks.map((fb) => (
                     <div
-                      key={fb.id}
+                      key={fb._id} // Use _id from backend
                       className="bg-purple-50 p-4 rounded-lg flex justify-between items-start"
                     >
                       <div className="flex-1">
@@ -514,7 +514,7 @@ export default function AdminDashboard() {
                         )}
                       </div>
                       <button
-                        onClick={() => handleDeleteFeedback(fb.id)}
+                        onClick={() => handleDeleteFeedback(fb._id)} // Use _id here too
                         className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
                       >
                         Delete
@@ -523,6 +523,7 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               )}
+
             </div>
           </div>
         )}

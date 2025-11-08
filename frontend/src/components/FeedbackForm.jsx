@@ -1,62 +1,43 @@
 // src/components/FeedbackForm.jsx
 import { useState } from "react";
-import config from "../../config";
 import { useEffect } from "react";
+import axiosInstance from "../utils/axiosInstance";
 
-export default function FeedbackForm({ onSubmit, initial = {} }) {
+export default function FeedbackForm({ booking, onClose, initial = {} }) {
   const [form, setForm] = useState({
-    name: initial.name || "",
-    email: initial.email || "",
     rating: initial.rating || 5,
     text: initial.text || "",
   });
-
-
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (user && user.role == config.userRole) {
-      setForm((prev) => ({
-        ...prev,
-        username: user.username || "",
-        email: user.email || "",
-      }));
-    }
-  }, []);
-
+  const bookingId = booking?._id
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.text) return;
-    onSubmit(form);
-    setForm({ name: "", email: "", rating: 5, text: "" });
+    if (!form.text) return alert("Please enter feedback text!");
+
+    if (!bookingId) return alert("Booking ID is required!");
+
+    try {
+      const { data } = await axiosInstance.post("/feedback", {
+        bookingId,
+        rating: form.rating,
+        text: form.text,
+      });
+
+      alert("Feedback submitted successfully!");
+      setForm({ rating: 5, text: "" });
+      onClose && onClose(data);
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Error submitting feedback");
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <input
-        disabled={true}
-        type="text"
-        name="name"
-        required
-        placeholder="Your Name"
-        value={form.username}
-        onChange={handleChange}
-        className="w-full px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500 outline-none"
-      />
-      <input
-        disabled={true}
-        type="email"
-        name="email"
-        required
-        placeholder="Your Email"
-        value={form.email}
-        onChange={handleChange}
-        className="w-full px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500 outline-none"
-      />
       <select
         name="rating"
         value={form.rating}
@@ -69,6 +50,7 @@ export default function FeedbackForm({ onSubmit, initial = {} }) {
           </option>
         ))}
       </select>
+
       <textarea
         name="text"
         required
@@ -78,6 +60,7 @@ export default function FeedbackForm({ onSubmit, initial = {} }) {
         rows="4"
         className="w-full px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500 outline-none"
       />
+
       <button
         type="submit"
         className="w-full bg-purple-600 text-white py-3 rounded-lg font-bold hover:bg-purple-700 transition"

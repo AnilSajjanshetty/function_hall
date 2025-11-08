@@ -65,11 +65,11 @@ export default function LoginPage() {
   };
 
   return (
-    
+
     <div className="min-h-screen bg-gradient-to-br from-purple-900 to-pink-900 flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
         <h2 className="text-3xl font-bold text-center mb-8 text-purple-900">
-          Admin Login
+          Login
         </h2>
 
         <form onSubmit={handleLogin}>
@@ -98,16 +98,16 @@ export default function LoginPage() {
           >
             {loading ? "Logging in..." : "Login"}
           </button>
-            {/* 🔹 Register link */}
-        <p className="text-center text-gray-600 mt-6">
-          Don’t have an account?
-          <Link
-            to="/register"
-            className="text-purple-600 font-semibold hover:underline"
-          >
-            Register here
-          </Link>
-        </p>
+          {/* 🔹 Register link */}
+          <p className="text-center text-gray-600 mt-6">
+            Don’t have an account?
+            <Link
+              to="/register"
+              className="text-purple-600 font-semibold hover:underline"
+            >
+              Register here
+            </Link>
+          </p>
         </form>
       </div>
     </div>

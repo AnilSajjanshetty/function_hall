@@ -21,9 +21,11 @@ const BookingFormModal = ({ show, onClose, onBookingSuccess }) => {
     { id: 5, name: "Anniversary" },
   ];
 
+  const [userId, setUserId] = useState(null)
   // Prefill name and email from localStorage
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
+    setUserId(user.id)
     if (user) {
       setBookingForm((prev) => ({
         ...prev,
@@ -36,7 +38,7 @@ const BookingFormModal = ({ show, onClose, onBookingSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axiosInstance.post("/bookings", bookingForm);
+      const response = await axiosInstance.post(`/bookings/${userId}`, bookingForm);
       alert("Booking request submitted successfully!");
       setBookingForm({
         ...bookingForm,
