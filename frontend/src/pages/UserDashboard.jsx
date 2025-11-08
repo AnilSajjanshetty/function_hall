@@ -1,19 +1,20 @@
-// src/pages/UserDashboard.jsx
 import { useState, useEffect } from "react";
 import { Calendar, Plus, MessageSquare } from "lucide-react";
 import axiosInstance from "../utils/axiosInstance";
 import { useTranslation } from "react-i18next";
 import BookingFormModal from "../components/BookingForm";
-import FeedbackForm from "../components/FeedbackForm"; // ✅ make sure this exists
+import FeedbackForm from "../components/FeedbackForm";
 
 export default function UserDashboard() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const { t } = useTranslation();
-  const [showModal, setShowModal] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState(null);
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
+  const [showModal, setShowModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+
+  // ✅ Load bookings only
   const loadBookings = async () => {
     setLoading(true);
     try {
@@ -60,7 +61,7 @@ export default function UserDashboard() {
           <h4 className="text-2xl font-bold text-purple-900">User Dashboard</h4>
         </div>
 
-        {/* Tabs - Only Bookings */}
+        {/* Tabs - Bookings */}
         <div className="bg-white rounded-xl shadow-lg p-3 flex flex-wrap gap-2 mb-6 justify-between items-center">
           <button className="px-6 py-3 rounded-lg font-semibold bg-purple-600 text-white">
             {t("bookings")} ({bookings?.length})
@@ -98,7 +99,7 @@ export default function UserDashboard() {
           ) : (
             bookings.map((booking) => (
               <div
-                key={booking?.id}
+                key={booking?._id}
                 className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition"
               >
                 <div className="flex justify-between items-start mb-4 flex-wrap gap-2">
@@ -149,7 +150,7 @@ export default function UserDashboard() {
                   </p>
                 )}
 
-                {/* ✅ Show Feedback button only if approved and date passed */}
+                {/* Feedback button only if approved and event date passed */}
                 {booking?.status === "approved" &&
                   isEventCompleted(booking?.date) && (
                     <button
@@ -171,11 +172,23 @@ export default function UserDashboard() {
 
       {/* Feedback Modal */}
       {showFeedbackModal && selectedBooking && (
-        <FeedbackForm
-          booking={selectedBooking}
-          show={showFeedbackModal}
-          onClose={() => setShowFeedbackModal(false)}
-        />
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white rounded-xl p-6 shadow-xl w-[90%] sm:w-[500px]">
+            <h3 className="text-xl font-semibold text-purple-900 mb-4 text-center">
+              Feedback for {selectedBooking?.eventType}
+            </h3>
+            <FeedbackForm
+              booking={selectedBooking}
+              onClose={() => setShowFeedbackModal(false)}
+            />
+            {/* Cancel Button */}
+            <button
+              onClick={() => setShowFeedbackModal(false)}
+              className="mt-4 w-full bg-red-500 text-white py-3 rounded-lg font-semibold hover:bg-red-600 transition"            >
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
