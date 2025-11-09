@@ -39,6 +39,10 @@ app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
+// in server.js or index.js
+app.get("/", (req, res) => {
+  res.send("✅ Viraj Garden API is live!");
+});
 
 // API Routes
 app.use("/api/auth", authRoutes);
