@@ -10,6 +10,8 @@ import {
   Mail,
   LogOut,
   MessageSquare,
+  Image as ImageIcon,
+  Upload,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BookingFormModal from "../components/BookingForm";
@@ -20,6 +22,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("bookings");
   const [bookings, setBookings] = useState([]);
   const [events, setEvents] = useState([]);
+  const [galleryItems, setGalleryItems] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [messages, setMessages] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
@@ -28,20 +31,33 @@ export default function AdminDashboard() {
   // Forms
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [announcementForm, setAnnouncementForm] = useState({ title: "", message: "" });
+
+  // Unified Event + Media Form
   const [eventForm, setEventForm] = useState({
     title: "",
     type: "",
     date: "",
     guests: "",
     description: "",
-    imageUrls: "",
-    videoUrls: "",
+    files: null, // FileList for images/videos
   });
+
   const [feedbackForm, setFeedbackForm] = useState({ text: "" });
+
+  // Gallery upload form
+  const [galleryForm, setGalleryForm] = useState({
+    files: null,
+    titles: "",
+    tags: "",
+  });
+
+  // Separate media upload for existing events
+  const [selectedEventForMedia, setSelectedEventForMedia] = useState(null);
+  const [eventMediaForm, setEventMediaForm] = useState({ files: null });
 
   const eventTypes = ["Wedding", "Birthday Party", "Engagement", "Office Event", "Anniversary"];
 
-  // === Normalize MongoDB _id → id ===
+  // === Normalize _id → id ===
   const normalize = (arr) => (arr || []).map(item => ({ ...item, id: item._id }));
 
   // === Load All Data ===
@@ -55,22 +71,25 @@ export default function AdminDashboard() {
       const [
         bookingsRes,
         eventsRes,
+        galleryRes,
         announcementsRes,
         messagesRes,
         feedbacksRes,
       ] = await Promise.all([
         axiosInstance.get("/bookings"),
         axiosInstance.get("/events"),
-        axiosInstance.get("/announcements"), // ← FIXED
+        axiosInstance.get("/gallery"),
+        axiosInstance.get("/announcements"),
         axiosInstance.get("/messages"),
         axiosInstance.get("/feedback"),
       ]);
 
       setBookings(normalize(bookingsRes.data));
-      setEvents(normalize(eventsRes.data));
+      setEvents(normalize(eventsRes.data.events || []));
+      setGalleryItems(normalize(galleryRes.data.gallery || []));
       setAnnouncements(normalize(announcementsRes.data));
       setMessages(normalize(messagesRes.data));
-      setFeedbacks(normalize(feedbacksRes.data.data));
+      setFeedbacks(normalize(feedbacksRes.data.data || []));
     } catch (error) {
       console.error("Error loading data:", error);
       if (error.response?.status === 401 || error.response?.status === 403) {
@@ -120,32 +139,38 @@ export default function AdminDashboard() {
     }
   };
 
-  // === EVENTS ===
+  // === EVENTS + MEDIA IN ONE GO ===
   const handleEventSubmit = async (e) => {
     e.preventDefault();
-    const imageUrls = eventForm.imageUrls.split(",").map(s => s.trim()).filter(Boolean);
-    const videoUrls = eventForm.videoUrls.split(",").map(s => s.trim()).filter(Boolean);
+    if (!eventForm.files || eventForm.files.length === 0) {
+      return alert("Please upload at least one image/video");
+    }
+
+    const formData = new FormData();
+    formData.append("title", eventForm.title);
+    formData.append("type", eventForm.type);
+    formData.append("date", eventForm.date);
+    formData.append("guests", parseInt(eventForm.guests));
+    formData.append("description", eventForm.description);
+    Array.from(eventForm.files).forEach(file => formData.append("files", file));
 
     try {
-      await axiosInstance.post("/events", {
-        ...eventForm,
-        guests: parseInt(eventForm.guests),
-        images: imageUrls,
-        videos: videoUrls,
+      await axiosInstance.post("/events", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      alert("Event added!");
+      alert("Event created with media!");
       setEventForm({
         title: "",
         type: "",
         date: "",
         guests: "",
         description: "",
-        imageUrls: "",
-        videoUrls: "",
+        files: null,
       });
       loadAllData();
-    } catch (e) {
-      alert("Failed to add event");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to create event: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -154,6 +179,71 @@ export default function AdminDashboard() {
     try {
       await axiosInstance.delete(`/events/${id}`);
       alert("Event deleted");
+      loadAllData();
+    } catch (e) {
+      alert("Failed to delete");
+    }
+  };
+
+  // Upload media to existing event
+  const handleUploadEventMedia = async (e) => {
+    e.preventDefault();
+    if (!eventMediaForm.files || eventMediaForm.files.length === 0) return;
+    if (!selectedEventForMedia) return alert("Select an event first");
+
+    const formData = new FormData();
+    Array.from(eventMediaForm.files).forEach(file => formData.append("files", file));
+    formData.append("eventId", selectedEventForMedia.id);
+
+    try {
+      await axiosInstance.post(`/events/${selectedEventForMedia.id}/media`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      alert("Media uploaded!");
+      setEventMediaForm({ files: null });
+      loadAllData();
+    } catch (e) {
+      alert("Failed to upload media");
+    }
+  };
+
+  // === GALLERY ===
+  const handleGallerySubmit = async (e) => {
+    e.preventDefault();
+    if (!galleryForm.files || galleryForm.files.length === 0) return;
+    if (!galleryForm.titles.trim()) return alert("Titles required");
+
+    const formData = new FormData();
+    Array.from(galleryForm.files).forEach(file => formData.append("files", file));
+
+    const titlesArray = galleryForm.titles.split(',').map(t => t.trim()).filter(Boolean);
+    if (titlesArray.length !== galleryForm.files.length) {
+      return alert("Number of titles must match number of files");
+    }
+    formData.append("titles", JSON.stringify(titlesArray));
+
+    if (galleryForm.tags.trim()) {
+      const tagsArray = galleryForm.tags.split(',').map(t => t.trim()).filter(Boolean);
+      formData.append("tags", JSON.stringify(Array.from(galleryForm.files).map((_, i) => [tagsArray[i % tagsArray.length]])));
+    }
+
+    try {
+      await axiosInstance.post("/gallery/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      alert("Gallery items uploaded!");
+      setGalleryForm({ files: null, titles: "", tags: "" });
+      loadAllData();
+    } catch (e) {
+      alert("Failed to upload to gallery");
+    }
+  };
+
+  const handleDeleteGalleryItem = async (id) => {
+    if (!window.confirm("Delete this gallery item?")) return;
+    try {
+      await axiosInstance.delete(`/gallery/${id}`);
+      alert("Gallery item deleted");
       loadAllData();
     } catch (e) {
       alert("Failed to delete");
@@ -203,11 +293,12 @@ export default function AdminDashboard() {
           <h4 className="text-2xl font-bold text-purple-900">Dashboard</h4>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs - Updated: Renamed "gallery" to "events", added "gallery" tab */}
         <div className="bg-white rounded-xl shadow-lg p-2 flex flex-wrap gap-2 mb-6">
           {[
             { id: "bookings", label: "Bookings", count: bookings.length, icon: <Calendar className="w-5 h-5" /> },
-            { id: "gallery", label: "Gallery", count: events.length, icon: <PartyPopper className="w-5 h-5" /> },
+            { id: "events", label: "Events", count: events.length, icon: <PartyPopper className="w-5 h-5" /> }, // Renamed
+            { id: "gallery", label: "Gallery", count: galleryItems.length, icon: <ImageIcon className="w-5 h-5" /> }, // New tab
             { id: "announcements", label: "Announcements", count: announcements.length, icon: <Bell className="w-5 h-5" /> },
             { id: "messages", label: "Messages", count: messages.length, icon: <Mail className="w-5 h-5" /> },
             { id: "feedback", label: "Feedback", count: feedbacks.length, icon: <MessageSquare className="w-5 h-5" /> },
@@ -304,12 +395,13 @@ export default function AdminDashboard() {
             )}
           </div>
         )}
-        {/* === GALLERY TAB === */}
-        {activeTab === "gallery" && (
+
+        {/* === EVENTS TAB (Create Event + Media in One Form) === */}
+        {activeTab === "events" && (
           <div className="space-y-6">
             <div className="bg-white p-6 rounded-lg shadow-lg">
               <h3 className="text-2xl font-bold text-purple-900 mb-4">
-                <PartyPopper className="inline w-6 h-6 mr-2" /> Add Event to Gallery
+                <PartyPopper className="inline w-6 h-6 mr-2" /> Create Event + Upload Media
               </h3>
               <form onSubmit={handleEventSubmit} className="space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">
@@ -329,9 +421,7 @@ export default function AdminDashboard() {
                   >
                     <option value="">Select Event Type</option>
                     {eventTypes.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
+                      <option key={t} value={t}>{t}</option>
                     ))}
                   </select>
                   <input
@@ -359,28 +449,23 @@ export default function AdminDashboard() {
                   rows="3"
                 />
                 <input
-                  type="text"
-                  placeholder="Image URLs (comma separated)"
-                  value={eventForm.imageUrls}
-                  onChange={(e) => setEventForm({ ...eventForm, imageUrls: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500 outline-none"
-                />
-                <input
-                  type="text"
-                  placeholder="Video URLs (YouTube embed)"
-                  value={eventForm.videoUrls}
-                  onChange={(e) => setEventForm({ ...eventForm, videoUrls: e.target.value })}
+                  type="file"
+                  multiple
+                  accept="image/*,video/*"
+                  required
+                  onChange={(e) => setEventForm({ ...eventForm, files: e.target.files })}
                   className="w-full px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500 outline-none"
                 />
                 <button
                   type="submit"
                   className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-bold hover:from-purple-700 hover:to-pink-700 transition"
                 >
-                  Add Event
+                  Create Event & Upload Media ({eventForm.files?.length || 0} files)
                 </button>
               </form>
             </div>
 
+            {/* Existing events list */}
             <div className="bg-white p-6 rounded-lg shadow-lg">
               <h3 className="text-2xl font-bold text-purple-900 mb-4">Manage Events</h3>
               <div className="grid md:grid-cols-2 gap-4">
@@ -402,7 +487,84 @@ export default function AdminDashboard() {
                     <div className="flex gap-4 text-xs text-gray-500">
                       <span>Date: {ev.date}</span>
                       <span>Guests: {ev.guests}</span>
-                      <span>Images: {ev.images?.length || 0}</span>
+                      <span>Media: {ev.media?.length || 0}</span>
+                    </div>
+                    {ev.thumbnail && (
+                      <img src={ev.thumbnail.url} alt="Thumbnail" className="mt-2 w-full h-32 object-cover rounded" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* === GALLERY TAB === */}
+        {activeTab === "gallery" && (
+          <div className="space-y-6">
+            {/* Gallery upload form */}
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              <h3 className="text-2xl font-bold text-purple-900 mb-4">
+                <ImageIcon className="inline w-6 h-6 mr-2" /> Add to Gallery
+              </h3>
+              <form onSubmit={handleGallerySubmit} className="space-y-4">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*,video/*"
+                  onChange={(e) => setGalleryForm({ ...galleryForm, files: e.target.files })}
+                  className="w-full px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500 outline-none"
+                />
+                <input
+                  type="text"
+                  required
+                  placeholder="Titles (comma-separated, one per file)"
+                  value={galleryForm.titles}
+                  onChange={(e) => setGalleryForm({ ...galleryForm, titles: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500 outline-none"
+                />
+                <input
+                  type="text"
+                  placeholder="Tags (comma-separated, optional)"
+                  value={galleryForm.tags}
+                  onChange={(e) => setGalleryForm({ ...galleryForm, tags: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg border-2 border-purple-200 focus:border-purple-500 outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={!galleryForm.files || !galleryForm.titles.trim()}
+                  className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white py-3 rounded-lg font-bold hover:from-green-700 hover:to-blue-700 transition disabled:opacity-50"
+                >
+                  Upload to Gallery ({galleryForm.files?.length || 0} files)
+                </button>
+              </form>
+            </div>
+
+            {/* Gallery list */}
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              <h3 className="text-2xl font-bold text-purple-900 mb-4">Manage Gallery</h3>
+              <div className="grid md:grid-cols-3 gap-4">
+                {galleryItems.map((item) => (
+                  <div key={item.id} className="border-2 border-purple-200 rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h5 className="font-bold text-gray-800">{item.title}</h5>
+                        <p className="text-xs text-purple-600">{item.mediaType.toUpperCase()}</p>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteGalleryItem(item.id)}
+                        className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    {item.mediaType === "image" ? (
+                      <img src={item.url} alt={item.title} className="w-full h-32 object-cover rounded mb-2" />
+                    ) : (
+                      <video src={item.url} controls className="w-full h-32 object-cover rounded mb-2" />
+                    )}
+                    <div className="text-xs text-gray-500">
+                      <span>Tags: {item.tags?.join(", ") || "None"}</span>
                     </div>
                   </div>
                 ))}
@@ -502,7 +664,7 @@ export default function AdminDashboard() {
                 <div className="space-y-3">
                   {feedbacks.map((fb) => (
                     <div
-                      key={fb._id} // Use _id from backend
+                      key={fb.id} // Fixed: Use id from normalize
                       className="bg-purple-50 p-4 rounded-lg flex justify-between items-start"
                     >
                       <div className="flex-1">
@@ -514,7 +676,7 @@ export default function AdminDashboard() {
                         )}
                       </div>
                       <button
-                        onClick={() => handleDeleteFeedback(fb._id)} // Use _id here too
+                        onClick={() => handleDeleteFeedback(fb.id)} // Fixed: Use id
                         className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
                       >
                         Delete

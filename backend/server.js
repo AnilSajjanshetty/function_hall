@@ -15,6 +15,7 @@ const announcementRoutes = require("./routes/announcementRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const contactRoutes = require("./routes/contactRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
+const galleryRoutes = require("./routes/galleryRoutes");
 
 // Import middleware
 const errorHandler = require("./middleware/errorHandler");
@@ -43,6 +44,7 @@ app.use((req, res, next) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/events", eventRoutes);
+app.use("/api/gallery", galleryRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/contact", contactRoutes);

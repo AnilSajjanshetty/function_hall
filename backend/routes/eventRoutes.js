@@ -1,16 +1,58 @@
-// routes/eventRoutes.js
-const express = require('express');
+// routes/event.js
+const express = require("express");
 const router = express.Router();
-const eventController = require('../controllers/eventController');
-const { authenticate, authorizeAdmin } = require('../middleware/auth'); // ✅ Correct import
+const {
+  getAllEvents,
+  getEvent,
+  createEvent,
+  updateEvent,
+  deleteEvent,
+  uploadEventMedia,
+  setEventThumbnail,
+} = require("../controllers/eventController");
+const { authenticate } = require("../middleware/auth");
+const upload = require("../utils/upload");
 
-// Public routes
-router.get("/latest", eventController.getLatestEvents);
-router.get('/', eventController.getAllEvents);
-router.get('/:id', eventController.getEventById);
+// GET /api/events
+router.get("/", getAllEvents);
 
-// Protected routes (admin only)
-router.post('/', authenticate, authorizeAdmin, eventController.createEvent);
-router.put('/:id', authenticate, authorizeAdmin, eventController.updateEvent);
-router.delete('/:id', authenticate, authorizeAdmin, eventController.deleteEvent);
+// GET /api/events/:id
+router.get("/:id", getEvent);
+
+// POST /api/events (CORRECTED: Handles text fields + files in multipart/form-data)
+router.post(
+  "/",
+  authenticate,
+  upload.fields([
+    { name: "files", maxCount: 10 }, // Files
+    { name: "title" }, // Text fields
+    { name: "type" },
+    { name: "date" },
+    { name: "guests" },
+    { name: "description" },
+  ]),
+  createEvent
+);
+
+// PATCH /api/events/:id
+router.patch("/:id", authenticate, updateEvent);
+
+// DELETE /api/events/:id
+router.delete("/:id", authenticate, deleteEvent);
+
+// POST /api/events/:id/media (unchanged)
+router.post(
+  "/:id/media",
+  authenticate,
+  upload.array("files", 10),
+  (req, res, next) => {
+    req.body.eventId = req.params.id;
+    next();
+  },
+  uploadEventMedia
+);
+
+// PATCH /api/events/thumbnail
+router.patch("/thumbnail", authenticate, setEventThumbnail);
+
 module.exports = router;
