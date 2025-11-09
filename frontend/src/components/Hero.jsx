@@ -2,18 +2,18 @@
 import { Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import bgImage from "../assets/virajgarden.webp"; 
+import bgImage from "../assets/virajgarden.webp";
 
 export default function Hero() {
   const { t } = useTranslation();
 
   return (
     <div
-      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-purple-900 via-pink-800 to-rose-900"
+      className="relative min-h-screen flexitems-center justify-center overflow-hidden bg-gradient-to-br from-purple-900 via-pink-800 to-rose-900"
       style={{
         backgroundImage: `url(${bgImage})`,
         backgroundSize: "cover",
-        backgroundPosition: "center", 
+        backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
       }}
     >
@@ -30,7 +30,7 @@ export default function Hero() {
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 text-center text-white px-4 sm:px-6 md:px-8">
+      <div className="relative z-10 text-center text-white px-4 sm:px-6 md:px-8 pt-25">
         <div className="mb-6 animate-bounce">
           <Sparkles className="w-14 h-14 md:w-20 md:h-20 mx-auto text-yellow-300" />
         </div>
@@ -49,17 +49,17 @@ export default function Hero() {
           Register to book now
         </Link>
 
-        <div className="mt-12 md:mt-16 grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-8 max-w-3xl mx-auto">
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 sm:p-6">
-            <p className="text-3xl sm:text-4xl font-bold text-yellow-300">500+</p>
+        <div className="mt-12 md:mt-16 grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-8 max-w-3xl mx-auto mb-5">
+          <div className="bg-gradient-to-br from-yellow-400/80 to-orange-500/80 backdrop-blur-lg rounded-xl p-4 sm:p-6 shadow-lg hover:scale-105 transition-transform duration-300">
+            <p className="text-3xl sm:text-4xl font-bold text-yellow-300">300+</p>
             <p className="text-pink-200 text-sm sm:text-base">{t("eventsHosted")}</p>
           </div>
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 sm:p-6">
+          <div className="bg-gradient-to-br from-yellow-400/80 to-orange-500/80 backdrop-blur-lg rounded-xl p-4 sm:p-6 shadow-lg hover:scale-105 transition-transform duration-300">
             <p className="text-3xl sm:text-4xl font-bold text-yellow-300">1000+</p>
             <p className="text-pink-200 text-sm sm:text-base">{t("happyClients")}</p>
           </div>
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 sm:p-6">
-            <p className="text-3xl sm:text-4xl font-bold text-yellow-300">15+</p>
+          <div className="bg-gradient-to-br from-yellow-400/80 to-orange-500/80 backdrop-blur-lg rounded-xl p-4 sm:p-6 shadow-lg hover:scale-105 transition-transform duration-300">
+            <p className="text-3xl sm:text-4xl font-bold text-yellow-300">8+</p>
             <p className="text-pink-200 text-sm sm:text-base">{t("yearsExperience")}</p>
           </div>
         </div>
