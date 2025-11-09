@@ -100,7 +100,41 @@ const getEvent = async (req, res) => {
   }
 };
 
-// 3. CREATE EVENT (Updated: Handles text fields + files in one request)
+// 3 GET LATEST 5 EVENTS (published, sorted by date desc)
+const getLatestEvents = async (req, res) => {
+  try {
+    // Fixed params for latest 5
+    const filter = { isPublished: true };
+    const sortObj = { date: -1 }; // Latest by date
+
+    const events = await Event.find(filter).sort(sortObj).limit(5).lean();
+
+    const results = await Promise.all(
+      (events || []).map(async (event) => {
+        event.media = Array.isArray(event.media) ? event.media : [];
+        event.media = await attachMediaUrls(event.media);
+
+        if (event.thumbnailId && event.media.length > 0) {
+          const thumb = event.media.find(
+            (m) => m._id?.toString() === event.thumbnailId?.toString()
+          );
+          event.thumbnail = thumb || null;
+        } else {
+          event.thumbnail = null;
+        }
+
+        return event;
+      })
+    );
+
+    res.json({ events: results });
+  } catch (err) {
+    console.error("getLatestEvents error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+// 4. CREATE EVENT (Updated: Handles text fields + files in one request)
 const createEvent = async (req, res) => {
   try {
     // Parse text fields from req.body
@@ -185,7 +219,7 @@ const createEvent = async (req, res) => {
   }
 };
 
-// 4. UPDATE EVENT (any field)
+// 5. UPDATE EVENT (any field)
 const updateEvent = async (req, res) => {
   try {
     const { id } = req.params;
@@ -212,7 +246,7 @@ const updateEvent = async (req, res) => {
   }
 };
 
-// 5. DELETE EVENT + ALL MEDIA FROM MINIO
+// 6. DELETE EVENT + ALL MEDIA FROM MINIO
 const deleteEvent = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
@@ -231,7 +265,7 @@ const deleteEvent = async (req, res) => {
   }
 };
 
-// 6. UPLOAD MEDIA TO EVENT (For existing events)
+// 7. UPLOAD MEDIA TO EVENT (For existing events)
 const uploadEventMedia = async (req, res) => {
   try {
     const { eventId } = req.body;
@@ -281,7 +315,7 @@ const uploadEventMedia = async (req, res) => {
   }
 };
 
-// 7. SET THUMBNAIL
+// 8. SET THUMBNAIL
 const setEventThumbnail = async (req, res) => {
   try {
     const { eventId, mediaId } = req.body;
@@ -315,4 +349,5 @@ module.exports = {
   deleteEvent,
   uploadEventMedia,
   setEventThumbnail,
+  getLatestEvents,
 };

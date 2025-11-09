@@ -14,13 +14,13 @@ export default function HomePage() {
   const [recentEvents, setRecentEvents] = useState([]);
   const [loading, setLoading] = useState(false);
 
- // 🎞️ Realistic Wedding / Function Videos (Pexels)
+  // 🎞️ Realistic Wedding / Function Videos (Pexels)
   const weddingVideos = [
     videos.video1,
     videos.video2,
     videos.video3,
     videos.video4,
-    videos.video5,  
+    videos.video5,
   ];
   const weddingImages = [
     images.wedding1,
@@ -38,7 +38,7 @@ export default function HomePage() {
         axiosInstance.get("/events/latest"),
       ]);
       setAnnouncements(annRes.data || []);
-      setRecentEvents(eventRes.data || []);
+      setRecentEvents(eventRes.data.events || []);
     } catch (error) {
       console.error("Error fetching latest data:", error);
     } finally {
@@ -161,7 +161,7 @@ export default function HomePage() {
                     </div> */}
                     <div className="relative h-72 overflow-hidden">
                       {event.videos?.length > 0 ? (
-                         <video
+                        <video
                           src={weddingVideos[index]}
                           autoPlay
                           muted

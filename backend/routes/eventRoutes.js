@@ -9,12 +9,14 @@ const {
   deleteEvent,
   uploadEventMedia,
   setEventThumbnail,
+  getLatestEvents,
 } = require("../controllers/eventController");
 const { authenticate } = require("../middleware/auth");
 const upload = require("../utils/upload");
 
 // GET /api/events
 router.get("/", getAllEvents);
+router.get("/latest", getLatestEvents);
 
 // GET /api/events/:id
 router.get("/:id", getEvent);
