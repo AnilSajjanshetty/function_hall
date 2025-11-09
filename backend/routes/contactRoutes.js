@@ -1,9 +1,17 @@
-// routes/contactRoutes.js
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const contactController = require('../controllers/contactController');
+const {
+  createMessage,
+  getAllMessages,
+  markAsRead,
+} = require("../controllers/messageController");
 
-// Public route
-router.post('/', contactController.sendContactMessage);
+// POST - Add new message
+router.post("/", createMessage);
+
+// GET - Get all messages
+router.get("/", getAllMessages);
+
+router.get("/:id", markAsRead);
 
 module.exports = router;

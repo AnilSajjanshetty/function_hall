@@ -630,12 +630,13 @@ export default function AdminDashboard() {
             <div className="space-y-3">
               {messages.map((m) => (
                 <div key={m.id} className="bg-gray-50 p-4 rounded-lg">
+                  <p className="font-semibold text-purple-800">{m.name}</p>
+                  <p className="font-semibold text-purple-800">{m.phone}</p>
                   <p className="font-semibold text-purple-800">{m.subject}</p>
-                  <p className="text-sm text-gray-600">To: {m.to}</p>
                   <p className="text-xs text-gray-500">
                     {new Date(m.timestamp).toLocaleString()}
                   </p>
-                  <p className="text-sm text-gray-700 mt-2 bg-white p-3 rounded">{m.body}</p>
+                  <p className="text-sm text-gray-700 mt-2 bg-white p-3 rounded">{m.message}</p>
                 </div>
               ))}
               {messages.length === 0 && (
