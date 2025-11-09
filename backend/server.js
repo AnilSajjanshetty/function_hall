@@ -25,15 +25,20 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-// Middleware
-const allowedOrigins = process.env.ALLOWED_ORIGINS.split(",");
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://virajgardenbyanils.vercel.app",
+  "https://virajgardenbyanils2025.vercel.app",
+];
 
 app.use(
   cors({
-    origin: (origin, callback) => {
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl)
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.log("❌ Blocked by CORS:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
